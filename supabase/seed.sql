@@ -1,0 +1,2 @@
+-- Future local development seed data: fictional services, staff, teams, and referrals.
+-- Never include real client records, authentication secrets, or production exports.

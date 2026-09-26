@@ -1,0 +1,6 @@
+{
+  "name": "montrose-center-web",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Placeholder manifest for the Next.js and TypeScript frontend. Dependencies and scripts will be added during application initialization."
+}

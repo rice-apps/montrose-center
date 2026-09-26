@@ -1,0 +1,13 @@
+# Placeholder CI workflow. Replace the notice with frontend and backend checks
+# after dependencies, lockfiles, and test commands have been configured.
+name: Scaffold CI
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scaffold-notice:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain scaffold status
+        run: echo "Scaffold only - application checks are not configured yet."

@@ -1,0 +1,6 @@
+# Placeholder project metadata. Add dependencies and tooling when initializing the API.
+[project]
+name = "montrose-center-api"
+version = "0.0.0"
+description = "FastAPI backend for service discovery, referrals, and administration."
+# FastAPI, Pydantic, Supabase access, and optional Pydantic AI dependencies are not configured yet.
