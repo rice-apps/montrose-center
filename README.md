@@ -1,41 +1,39 @@
-# Montrose Center: first sprint scaffold
+# Montrose Center resource discovery tool
 
-This repository contains only the first sprint's chat project scaffold. The task files provide **signatures and short TODO comments, without implementations**. The page is a placeholder, and the chat API routes are not registered yet. Fictional data for the agent task is in `apps/api/app/data/resources.json`.
+The Phase 1 goal is to help Montrose Center staff find the right **internal or external service** for a client's needs and learn whom to contact for a referral. Staff currently rely on personal knowledge, a group chat, and exact-keyword search. That makes it hard to discover services across programs, especially for newer staff, and to find current referral contacts.
 
-## Seven starter tasks
+## Phase 1 product summary
 
-| Task | File | What to build |
-| --- | --- | --- |
-| 1. Message component | `apps/web/src/components/ChatMessage.tsx` | Render one chat message. |
-| 2. Sidebar component | `apps/web/src/components/ChatSidebar.tsx` | Show chats and selection controls. |
-| 3. Input component | `apps/web/src/components/ChatInput.tsx` | Collect and submit a message. |
-| 4. Chat API | `apps/api/app/routers/chats.py`, `apps/web/src/lib/api.ts` | Create, list, read, rename, and message chats. |
-| 5. Chat logic | `apps/api/app/services/chats.py` | Coordinate the repository and agent. |
-| 6. Persistence | `apps/api/app/repositories/chats.py` | Save chats and messages in SQLite. |
-| 7. Agent | `apps/api/app/services/agent.py` | Put dummy data in the system prompt and call an LLM. |
+- **Find a resource:** A staff member describes needs and preferences in natural language. The tool recommends specific services, names their parent programs, explains possible fit, and supports follow-up questions. If it cannot find a suitable service, it should say so.
+- **Find a contact:** For a selected service, the tool shows the responsible person or team, contact details, and referral instructions. It should identify missing contact information clearly.
+- **Explore programs:** Staff can ask about programs or types of support to learn what the Center offers beyond their own team.
 
-`apps/api/app/schemas/chats.py` defines the data shapes shared by the backend functions. The frontend types in `apps/web/src/lib/api.ts` mirror those shapes.
+New staff and experienced staff are the main users. The PRD also identifies administrators who want to understand usage. Phase 1 focuses on **resource discovery and contact lookup**; staff still initiate referrals through their existing communication channels. The first coding sprint does not include a public directory, authentication, SharePoint integration, or referral tracking.
 
-## Structure
+## Current repository status
 
-```text
-apps/
-  web/
-    src/app/                  Minimal Next.js page and layout
-    src/components/           Three chat component signatures
-    src/lib/api.ts            API client signatures and types
-  api/
-    app/main.py              Minimal FastAPI app and health endpoint
-    app/routers/chats.py     Chat route signatures
-    app/schemas/chats.py     Request and response types
-    app/services/chats.py    Chat workflow signatures
-    app/services/agent.py    Prompt and model signatures
-    app/repositories/chats.py SQLite signatures
-    app/data/resources.json  Fictional resources
+This is a **signature-only first-sprint scaffold**, not a working chat product. The chat components, API functions, persistence methods, and agent methods have TODO comments but no implementations. The web page is a placeholder, and only the API health endpoint is active. The agent task uses fictional data in `apps/api/app/data/resources.json`.
+
+See [the first coding sprint guide](design/first-coding-sprint.md) for the planned flow, the seven starter tasks, and how each task supports Phase 1.
+
+## Start the scaffold locally
+
+Use Node.js 22 and Python 3.11 or newer. In one terminal, start the API from the repository root:
+
+```sh
+cd apps/api
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## Setup
+The API health check is at `http://localhost:8000/health`. In a second terminal, start the web app:
 
-Use Node.js 22 and Python 3.11 or newer. From `apps/api`, run `python3 -m venv .venv`, activate it, install with `python -m pip install -e .`, then start `python -m uvicorn app.main:app --reload`. From `apps/web`, run `npm ci` and `npm run dev`.
+```sh
+cd apps/web
+npm ci
+npm run dev
+```
 
-The scaffold starts, but the seven tasks must be implemented before chat works. When implementing Task 7, configure `MODEL_NAME` and keep `OPENAI_API_KEY` on the backend. Do not use real client information in the fictional sprint data or demo chat.
+Open `http://localhost:3000` to see the placeholder page. The chat will not work until the sprint tasks are implemented. `apps/api/.env.example` and `apps/web/.env.example` list the settings needed as those tasks are built; the API does not automatically load those files. Keep model credentials on the backend and use fictional information during development.
