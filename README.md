@@ -18,12 +18,13 @@ See [the first coding sprint guide](design/first-coding-sprint.md) for the plann
 
 ## Start the scaffold locally
 
-Use Node.js 22 and Python 3.11 or newer. In one terminal, start the API from the repository root:
+Use Node.js 22 and Python 3.11 or newer. Check the Python version used to create the virtual environment: an existing `.venv` made with Python 3.10 must be recreated. On this machine, `python3.14` is available; on another machine, replace it with any installed Python 3.11+ executable. In one terminal, start the API from the repository root:
 
 ```sh
 cd apps/api
-python3 -m venv .venv
+python3.14 -m venv --clear .venv
 source .venv/bin/activate
+python --version
 python -m pip install -e .
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
