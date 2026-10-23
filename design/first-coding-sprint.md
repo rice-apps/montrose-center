@@ -11,7 +11,7 @@ flowchart TB
     Staff["Staff member asks about a need"] --> UI["Chat UI in Next.js"]
     UI --> API["Chat endpoints in FastAPI"]
     API --> Service["Chat service"]
-    Service --> History[(SQLite conversation history)]
+    Service --> History[(Supabase chats and messages)]
     Service --> Agent["Resource agent"]
     Dummy["Fictional resource JSON for sprint"] --> Agent
     Agent --> LLM["LLM"]
@@ -21,7 +21,7 @@ flowchart TB
     API --> UI
     UI --> Review["Staff reviews service and contact"]
     Review --> Referral["Staff uses existing referral channel"]
-    Catalog[(Internal and external service catalog in Phase 1)] -.-> Agent
+    Catalog[(Supabase service catalog in Phase 1)] -.-> Agent
 ```
 
 The [Mermaid source file](first-coding-sprint.mmd) contains the same diagram for editors that open `.mmd` files directly.
@@ -37,7 +37,7 @@ The diagram shows the intended flow, **not current behavior**. The code currentl
 | 3 | Input component | Let staff send a question or follow-up. | Supports natural-language needs and refinements. |
 | 4 | Chat API | Define frontend requests and backend endpoints for chats and messages. | Connects the staff interface to search and response logic. |
 | 5 | Chat logic | Coordinate history, agent calls, and responses. | Provides the flow needed for follow-up questions. |
-| 6 | Persistence | Save chats and messages in local SQLite. | Supports conversation continuity during the sprint; the production data boundary is a later decision. |
+| 6 | Persistence | Save chats and messages in Supabase. | Supports conversation continuity for follow-up questions. |
 | 7 | Simple agent | Build a system prompt with fictional resources and call an LLM. | Tests the answer format before connecting the real service catalog. |
 
 The starting signatures are in `apps/web/src/components/`, `apps/web/src/lib/api.ts`, and `apps/api/app/{routers,services,repositories}/`. Request and response shapes are in `apps/api/app/schemas/chats.py`.

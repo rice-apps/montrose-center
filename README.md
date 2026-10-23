@@ -12,7 +12,7 @@ New staff and experienced staff are the main users. The PRD also identifies admi
 
 ## Current repository status
 
-This is a **signature-only first-sprint scaffold**, not a working chat product. The chat components, API functions, persistence methods, and agent methods have TODO comments but no implementations. The web page is a placeholder, and only the API health endpoint is active. The agent task uses fictional data in `apps/api/app/data/resources.json`.
+This is a **signature-only first-sprint scaffold**, not a working chat product. The chat components, API functions, persistence methods, and agent methods have TODO comments but no implementations. The web page is a placeholder, and only the API health endpoint is active. Chat persistence is planned for Supabase; the agent task uses fictional data in `apps/api/app/data/resources.json`.
 
 See [the first coding sprint guide](design/first-coding-sprint.md) for the planned flow, the seven starter tasks, and how each task supports Phase 1.
 
@@ -36,4 +36,4 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000` to see the placeholder page. The chat will not work until the sprint tasks are implemented. `apps/api/.env.example` and `apps/web/.env.example` list the settings needed as those tasks are built; the API does not automatically load those files. Keep model credentials on the backend and use fictional information during development.
+Open `http://localhost:3000` to see the placeholder page. The chat will not work until the sprint tasks are implemented. When building persistence, create the `chats` and `messages` tables in Supabase and set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in the backend environment. The [Supabase Python client](https://supabase.com/docs/reference/python/initializing) uses a project URL and key; [Supabase's key guide](https://supabase.com/docs/guides/getting-started/api-keys) says secret keys belong only in backend code. `apps/api/.env.example` and `apps/web/.env.example` list the other settings needed as the tasks are built; the API does not automatically load those files. Use fictional information during development.

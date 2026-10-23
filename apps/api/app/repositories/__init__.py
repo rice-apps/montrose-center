@@ -1,1 +1,1 @@
-"""Database access using appropriate user-scoped credentials and explicit access boundaries."""
+"""Supabase database access for the chat repository."""

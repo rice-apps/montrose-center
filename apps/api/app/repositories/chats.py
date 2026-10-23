@@ -1,14 +1,14 @@
-"""Task 6: persist chats and messages locally."""
+"""Task 6: persist chats and messages in Supabase."""
 
-from pathlib import Path
+from supabase import Client
 
 from app.schemas.chats import Chat, ChatSummary, SendMessageResponse
 
 
 class ChatRepository:
-    def __init__(self, path: Path | None = None) -> None: ...
+    def __init__(self, client: Client) -> None: ...
 
-    # TODO: use SQLite for the first sprint and return the declared chat types.
+    # TODO: read and write the Supabase chats and messages tables.
     def create_chat(self, title: str) -> Chat: ...
 
     def list_chats(self) -> list[ChatSummary]: ...
