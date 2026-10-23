@@ -24,8 +24,6 @@ flowchart TB
     Catalog[(Supabase service catalog in Phase 1)] -.-> Agent
 ```
 
-The [Mermaid source file](first-coding-sprint.mmd) contains the same diagram for editors that open `.mmd` files directly.
-
 The diagram shows the intended flow, **not current behavior**. The code currently contains task signatures; the chat UI, chat endpoints, persistence, and model call still need implementation. In Phase 1, the resource catalog should provide specific services, their parent programs, eligibility details, referral instructions, and contacts. The staff member decides which resource to use and initiates any referral outside this tool.
 
 ## Starter tasks
