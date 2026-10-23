@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Example Housing Navigation",
+    "program": "Example Support Services",
+    "description": "Fictional help exploring housing options and applications.",
+    "population_served": "Adults seeking housing support",
+    "eligibility": "Confirm directly with the example program",
+    "referral_contact": "example-housing@invalid.example"
+  },
+  {
+    "name": "Example Counseling Intake",
+    "program": "Example Wellness Program",
+    "description": "Fictional first conversation about counseling needs and preferences.",
+    "population_served": "Adults seeking counseling",
+    "eligibility": "Confirm directly with the example program",
+    "referral_contact": "example-counseling@invalid.example"
+  }
+]

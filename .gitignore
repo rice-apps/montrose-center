@@ -14,11 +14,6 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 *.egg-info/
-# Test and tool output
-coverage/
-htmlcov/
-playwright-report/
-test-results/
-supabase/.temp/
-supabase/.branches/
+*.sqlite3
+*.tsbuildinfo
 .DS_Store
