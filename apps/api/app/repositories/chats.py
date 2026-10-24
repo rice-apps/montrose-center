@@ -6,7 +6,8 @@ from app.schemas.chats import Chat, ChatSummary, SendMessageResponse
 
 
 class ChatRepository:
-    def __init__(self, client: Client) -> None: ...
+    def __init__(self, client: Client) -> None:
+        self.client = client
 
     # TODO: read and write the Supabase chats and messages tables.
     def create_chat(self, title: str) -> Chat: ...
