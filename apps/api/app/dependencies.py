@@ -1,33 +1,20 @@
-"""Request-scoped providers for the chat router (not application singletons)."""
+"""Request-scoped chat services using the application's shared Supabase client."""
 
-import os
-from collections.abc import Iterator
 from typing import Annotated
 
-import httpx
-from fastapi import Depends
-from supabase import Client, create_client
-from supabase.lib.client_options import SyncClientOptions
+from fastapi import Depends, HTTPException, Request
+from supabase import Client
 
 from app.repositories.chats import ChatRepository
 from app.services.agent import ResourceAgent
 from app.services.chats import ChatService
 
 
-def get_supabase_client() -> Iterator[Client]:
-    # Read configuration on demand so /health can run without database credentials.
-    url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_SECRET_KEY"]
-    with httpx.Client(timeout=120) as http_client:
-        yield create_client(
-            url,
-            key,
-            options=SyncClientOptions(
-                httpx_client=http_client,
-                auto_refresh_token=False,
-                persist_session=False,
-            ),
-        )
+def get_supabase_client(request: Request) -> Client:
+    client = request.app.state.supabase
+    if client is None:
+        raise HTTPException(status_code=503, detail="Supabase is not configured")
+    return client
 
 
 def get_chat_repository(

@@ -44,7 +44,9 @@ The starting signatures are in `apps/web/src/components/`, `apps/web/src/lib/api
 
 Each chat handler accepts `service: ChatServiceDep`, defined in `apps/api/app/dependencies.py`. Once Task 4 registers the routes, FastAPI will call `get_chat_service`, resolving its repository and agent dependencies first. The handler can then delegate to the supplied service (for example, `service.create_chat(payload.title)`). The service and repository use ordinary constructor arguments and do not depend on FastAPI.
 
-These providers create new instances per request; FastAPI reuses a provider's result within that request by default. They are not application-wide singletons. The Supabase provider reads the exported backend environment variables only when needed and closes its HTTP client after the request. Tests can replace `get_chat_service` or any lower-level provider with `app.dependency_overrides` without contacting Supabase or an LLM. The chat routes and business methods remain sprint TODOs.
+The repository, agent, and service providers create new instances per request; FastAPI reuses a provider's result within that request by default. The Supabase client is shared across requests within each application worker. FastAPI's lifespan in `app/main.py` creates it at startup, stores it on `app.state.supabase`, and closes its HTTP connection pool at shutdown. `get_supabase_client` retrieves this shared instance. Keep its backend credentials fixed; do not sign individual users into the shared client or change its authentication headers.
+
+Export `SUPABASE_URL` and `SUPABASE_SECRET_KEY` before starting the API. If either is missing, the scaffold still starts and `/health` works, but resolving the Supabase dependency returns HTTP 503. Restart the API after changing configuration. Tests can replace `get_chat_service` or any lower-level provider with `app.dependency_overrides` without contacting Supabase or an LLM. The chat routes and business methods remain sprint TODOs.
 
 ## Sprint completion target
 
