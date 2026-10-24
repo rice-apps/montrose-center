@@ -40,6 +40,12 @@ The diagram shows the intended flow, **not current behavior**. The code currentl
 
 The starting signatures are in `apps/web/src/components/`, `apps/web/src/lib/api.ts`, and `apps/api/app/{routers,services,repositories}/`. Request and response shapes are in `apps/api/app/schemas/chats.py`.
 
+### Router dependency injection
+
+Each chat handler accepts `service: ChatServiceDep`, defined in `apps/api/app/dependencies.py`. Once Task 4 registers the routes, FastAPI will call `get_chat_service`, resolving its repository and agent dependencies first. The handler can then delegate to the supplied service (for example, `service.create_chat(payload.title)`). The service and repository use ordinary constructor arguments and do not depend on FastAPI.
+
+These providers create new instances per request; FastAPI reuses a provider's result within that request by default. They are not application-wide singletons. The Supabase provider reads the exported backend environment variables only when needed and closes its HTTP client after the request. Tests can replace `get_chat_service` or any lower-level provider with `app.dependency_overrides` without contacting Supabase or an LLM. The chat routes and business methods remain sprint TODOs.
+
 ## Sprint completion target
 
 A developer should be able to start a chat, ask about the fictional resources, receive a reply based on that data, ask a follow-up, and reopen the conversation after a refresh. The demo should show when the fictional data does not contain an answer. 
