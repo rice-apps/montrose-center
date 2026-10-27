@@ -52,7 +52,7 @@ sequenceDiagram
 
     loop Bounded tool calls until enough evidence or no match
         LLM-->>Agent: Request search_services or get_service
-        Agent->>Tools: Validate arguments and prior-result references; execute tool
+        Agent->>Tools: Validate arguments and prior-result references, then execute tool
         Tools->>DB: Query active services and requested fields
         DB-->>Tools: Service IDs and canonical rows
         Tools-->>Agent: Tool result, including missing fields
