@@ -33,54 +33,33 @@ The explanation may be generated, but the card's service fields, contact details
 ## 2. Agent orchestration and tool calls
 
 ```mermaid
-sequenceDiagram
-    actor Staff
-    participant Web as Staff web app
-    participant API as FastAPI chat endpoint
-    participant DB as One Supabase database
-    participant Agent as Agent orchestrator
-    participant LLM as LLM provider
-    participant Tools as Backend tool executor
+flowchart TD
+    A["Staff sends a prompt or follow-up<br/>with a browser-held chat ID"]
+    B["API loads chat history and prior result IDs<br/>from Supabase"]
+    C["API resolves references such as<br/>'the second one' when needed"]
+    D["Agent gives the prompt and context<br/>to the LLM"]
+    E["LLM requests a tool call<br/>search_services or get_service"]
+    F["Backend validates the request<br/>and runs the allowed tool"]
+    G["Supabase returns active service records<br/>and any missing-field status"]
+    H["Agent gives the tool result to the LLM"]
+    I{"Need another tool call?<br/>Bounded loop"}
+    J["LLM returns service IDs and explanations<br/>or reports no match"]
+    K["API checks returned IDs<br/>against the tool results"]
+    L{"Suitable result?"}
+    M["API reads current facts and builds<br/>cards with grounded explanations"]
+    N["Explain the gap and invite a new search"]
+    O["Save the exchange and ordered result IDs<br/>in Supabase"]
+    P["Web displays the response"]
+    Q["API fetches current contacts<br/>and referral instructions"]
+    R["Web shows exact stored details<br/>and labels missing information"]
 
-    Staff->>Web: Enter question or follow-up
-    Web->>API: Send prompt with browser-held chat ID
-    API->>DB: Load recent messages and previously shown service IDs
-    DB-->>API: Conversation context
-    API->>API: Resolve references to prior result IDs when applicable
-    API->>Agent: Prompt and context
-    Agent->>LLM: Instructions, context, and allowed tool definitions
-
-    loop Bounded tool calls until enough evidence or no match
-        LLM-->>Agent: Request search_services or get_service
-        Agent->>Tools: Validate arguments and prior-result references, then execute tool
-        Tools->>DB: Query active services and requested fields
-        DB-->>Tools: Service IDs and canonical rows
-        Tools-->>Agent: Tool result, including missing fields
-        Agent->>LLM: Return tool result for next decision
-    end
-
-    LLM-->>Agent: Selected service IDs, grounded explanations, or no-match response
-    Agent->>Agent: Reject IDs absent from tool results
-    Agent-->>API: Selected IDs, explanations, requested details, and response state
-
-    alt Suitable services found
-        API->>DB: Read canonical fields and any requested contact details
-        DB-->>API: Current service fields and contacts
-        API->>DB: Save exchange and displayed service IDs
-        API-->>Web: Answer, database-backed cards, and any requested details
-    else No suitable service found
-        API->>DB: Save exchange
-        API-->>Web: Explain the gap and invite refinement
-    end
-    Web-->>Staff: Display response
-
-    opt Staff opens a service card
-        Web->>API: Request service detail by ID
-        API->>DB: Read current service, contacts, and referral instructions
-        DB-->>API: Stored details and missing-field status
-        API-->>Web: Exact stored details or explicit missing-field labels
-        Web-->>Staff: Display referral information
-    end
+    A --> B --> C --> D --> E --> F --> G --> H --> I
+    I -->|Yes| E
+    I -->|No| J --> K --> L
+    L -->|Yes| M --> O
+    L -->|No| N --> O
+    O --> P
+    P -->|Card opened or details requested| Q --> R
 ```
 
 The agent can choose among **allowlisted backend tools**; it does not connect directly to Supabase. `search_services` handles a need, a known name, or a refined query. `get_service` retrieves a specific service when a follow-up refers to a prior result. The backend validates tool arguments and checks references to earlier results. It builds service cards and contact answers from database records, so the LLM's job is to interpret the request, choose a tool, and explain why retrieved services may fit. It cannot invent a contact or referral instruction. A simple known-service lookup can skip the LLM when no interpretation is needed.
