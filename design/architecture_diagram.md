@@ -8,39 +8,32 @@ The [search and agent flows](search-and-agent-flow.md) show how a prompt becomes
 
 ```mermaid
 flowchart LR
-    Staff["Montrose Center staff"]
+    Staff["Staff member"] <--> UI["Next.js chat UI"]
 
-    subgraph System["Resource discovery tool — built by RiceApps"]
-        UI["Staff web app<br/>Next.js"]
-        API["Backend API<br/>FastAPI"]
-        UI <-->|"Chat requests, results, and history"| API
+    subgraph Backend["FastAPI backend"]
+        Routes["Chat routes"] --> Chat["Chat service"]
+        Chat --> Agent["Agent with search tools"]
+        Chat --> Repo["Repositories"]
+        Agent --> Repo
     end
 
-    subgraph Providers["Externally provided services"]
-        DB[("One Supabase database<br/>resource catalog + chat history")]
-        LLM["LLM provider"]
-    end
-
-    Referral["Existing referral channels"]
-
-    Staff <-->|"Describe needs, ask follow-ups, review services and contacts"| UI
-    API <-->|"Read catalog; save and load conversations"| DB
-    API <-->|"Generate answers from relevant catalog data and chat context"| LLM
-    Staff -->|"Initiate a referral after choosing a service"| Referral
+    UI <-->|"Chats and messages"| Routes
+    Repo <-->|"Read / write catalog and history"| DB[("Supabase database<br/>chats, messages, services, people")]
+    Agent <-->|"Tool requests + grounded answer"| LLM["LLM provider"]
+    Staff -->|"Send referral"| Referral["Existing channels"]
 ```
 
-The web app and backend API are the system we build. Supabase hosts **one database** containing several related tables; the LLM is a separate provider. Internal and external *resources* are catalog entries in that database, not separate infrastructure providers. Referral messages continue through the staff's existing channels, outside this tool.
+The web app and backend API are the system we build. Supabase holds the catalog and chat history in one database; the LLM is a separate provider. Referral messages continue through the staff's existing channels, outside this tool.
 
 The backend is responsible for retrieving relevant services and their program information, carrying conversation context into follow-up answers, and returning specific recommendations with reasons and available referral contacts. It should say when no suitable resource is found or when contact details are missing. Staff choose the service and initiate the referral themselves. Full-catalog browsing, catalog filters, and displayed ranking or confidence scores are P1 extensions; the same system boundary supports them without implying they are part of the first sprint.
 
 ## Proposed Supabase data model
 
-The schema below expands the single database in the overview. It adapts the supplied Services, People, Chat History, and Messages sketch. There is no `programs` table: each service stores its parent program's name directly, when applicable. The sketch's `Program_ID` is omitted because there is no local program record for it to identify. `contacts` covers either a person or a team.
+The schema below adapts the supplied Services, People, Chat History, and Messages sketch. There is no `programs` table: each service stores its parent program's name directly, when applicable. The sketch's `Program_ID` is omitted because there is no local program record for it to identify.
 
 ```mermaid
 erDiagram
-    SERVICES ||--o{ SERVICE_CONTACTS : has
-    CONTACTS ||--o{ SERVICE_CONTACTS : serves
+    SERVICES ||--o{ PEOPLE : has_contacts
     CHATS ||--o{ MESSAGES : contains
 
     SERVICES {
@@ -48,26 +41,19 @@ erDiagram
         string name
         string program_name
         string description
-        string scope
         string target_population
-        string eligibility
         string referral_instruction
         boolean is_active
         string keywords
     }
-    CONTACTS {
-        uuid contact_id PK
-        string name
-        string contact_type
-        string email
-        string phone
-        string team
-    }
-    SERVICE_CONTACTS {
-        uuid service_contact_id PK
+    PEOPLE {
+        uuid person_id PK
         uuid service_id FK
-        uuid contact_id FK
-        string service_description
+        string person_name
+        string person_email
+        string person_phone
+        string person_team
+        string person_service_description
     }
     CHATS {
         uuid chat_id PK
@@ -81,14 +67,17 @@ erDiagram
         string role
         string content
         datetime created_at
+        json result_service_ids
     }
 ```
 
-`services.scope` distinguishes internal from external resources. `services.program_name` may be empty for an external resource without a Montrose Center parent program. `messages.role` is `user` or `assistant`, matching the current API types and serving the purpose of the sketch's `Is_Agent` field. The sketch's `Chat History.Person_ID` is deferred because the Phase 1 scaffold has no staff identity or authentication model; chats and messages can still preserve context within a conversation.
+`services.keywords` is a list of terms on each service. `services.program_name` may be empty for an external resource without a Montrose Center parent program. `messages.role` is `user` or `assistant`, matching the current API types and serving the purpose of the sketch's `Is_Agent` field. `messages.result_service_ids` is an optional ordered list on assistant replies, proposed for follow-ups such as “the second one”; it is not in the current API types. The sketch's `Chat History.Person_ID` is deferred because `PEOPLE` holds referral contacts, not staff identities; chats and messages can still preserve context within a conversation.
 
-`SERVICE_CONTACTS` connects services to their referral contacts. For example, if one service accepts referrals through both a staff member and an intake team, it has two rows in this table, one for each contact. A contact can also serve multiple services. `service_description` records that contact's role for this particular service, and the `(service_id, contact_id)` pair should be unique.
+The supplied service fields do not separately record eligibility or whether a service is internal or external. Search can use the description and target population, but should not claim to have verified those missing details.
 
-In the diagram, **PK** means *primary key*: a value that uniquely identifies a row, such as `services.service_id`. **FK** means *foreign key*: a value that points to a row in another table. Here, `service_contacts.service_id` points to a service, and `service_contacts.contact_id` points to a contact.
+Each `PEOPLE` row points to one service through `service_id`, so a service can have multiple contacts. `person_service_description` describes that person's role for the service. The earlier `SERVICE_CONTACTS` table modeled a many-to-many relationship; it is unnecessary for the supplied schema. If the same person must be stored once and linked to several services later, a join table would then be useful.
+
+In the diagram, **PK** means *primary key*: a value that uniquely identifies a row, such as `services.service_id`. **FK** means *foreign key*: a value that points to another table. Here, `people.service_id` points to a service, and `messages.chat_id` points to a chat. `SERVICES.person_id` is omitted because it would allow only one contact per service and duplicate the relationship already recorded by `PEOPLE.service_id`.
 
 ## Planned API surface
 
