@@ -2,6 +2,8 @@
 
 This is the **target architecture for Phase 1**, based on the [first coding sprint flow](first-coding-sprint.md) and the Phase 1 resource discovery roadmap. It is a design proposal, not a diagram of working code: the repository currently has a placeholder web page and chat method signatures, while only the API health endpoint is active.
 
+The [search and agent flows](search-and-agent-flow.md) show how a prompt becomes ranked service results and how the agent uses backend tools.
+
 ## System overview
 
 ```mermaid
@@ -29,7 +31,7 @@ flowchart LR
 
 The web app and backend API are the system we build. Supabase hosts **one database** containing several related tables; the LLM is a separate provider. Internal and external *resources* are catalog entries in that database, not separate infrastructure providers. Referral messages continue through the staff's existing channels, outside this tool.
 
-The backend is responsible for retrieving relevant services and their program information, carrying conversation context into follow-up answers, and returning specific recommendations with reasons and available referral contacts. It should say when no suitable resource is found or when contact details are missing. Staff choose the service and initiate the referral themselves. A full catalog, filters, named-resource search, ranking, and confidence scores are P1 extensions; the same system boundary supports them without implying they are part of the first sprint.
+The backend is responsible for retrieving relevant services and their program information, carrying conversation context into follow-up answers, and returning specific recommendations with reasons and available referral contacts. It should say when no suitable resource is found or when contact details are missing. Staff choose the service and initiate the referral themselves. Full-catalog browsing, catalog filters, and displayed ranking or confidence scores are P1 extensions; the same system boundary supports them without implying they are part of the first sprint.
 
 ## Proposed Supabase data model
 
