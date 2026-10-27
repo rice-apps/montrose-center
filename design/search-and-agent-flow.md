@@ -43,13 +43,13 @@ sequenceDiagram
     LLM-->>Agent: search_services(query) or get_service(id)
     Agent->>Agent: Validate tool arguments and service IDs
     Agent->>Repo: Search or get service
-    Repo->>DB: Search active SERVICES; load PEOPLE for detail
+    Repo->>DB: Search active SERVICES and load PEOPLE for detail
     DB-->>Repo: Matching rows
     Repo-->>Agent: Retrieved rows
     Agent->>LLM: Retrieved facts
     LLM-->>Agent: Explanation + service IDs
     Agent-->>API: Answer + retrieved service IDs
-    API->>API: Verify IDs; build cards from stored rows
+    API->>API: Verify IDs and build cards from stored rows
     API->>Repo: Save messages + ordered result_service_ids
     Repo->>DB: Write chat exchange
     DB-->>Repo: Saved rows
