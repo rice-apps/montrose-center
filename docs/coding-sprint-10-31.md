@@ -52,7 +52,7 @@ No shared starter implementation is required before people take these tasks. The
 
 These are ownership boundaries for parallel branches, not seven extra prerequisites. Task 5's HTTP provider and Task 7's agent provider can each use a small local interface for their tests; during integration, make both call the same catalog repository and response mapping. The current API test dependency is optional (`python -m pip install -e '.[dev]'` from `apps/api`); the web app has no component-test runner configured, so Task 6 can verify its sample states with a local preview and `npm run typecheck`.
 
-| # | Independent task | Scope for about 2.5 hours | Local pass condition | Later integration point |
+| # | Independent task | Scope | Local pass condition | Later integration point |
 | --- | --- | --- | --- | --- |
 | 1 | **Catalog tables** | Add a migration for `services` and `people` using the shared contract, with keys, contact foreign key, and nullable unknown fields. Work only in migration files. | Apply the migration to an empty local Postgres/Supabase database; insert and read one service with two contacts. | The database backing search and contact lookup. |
 | 2 | **Fictional catalog fixtures** | Add a standalone JSON fixture under `apps/api/app/data/` with a few fictional service and contact records matching the contract. Cover internal/external, active/inactive, multiple contacts, and missing contact information. Do not change the existing first-sprint `resources.json`. | A local validation script or test checks required fields and UUIDs; all records are fictional. This task does not need Task 1's tables. | Seed data and repeatable examples for search and display checks. |
