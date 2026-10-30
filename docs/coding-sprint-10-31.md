@@ -2,7 +2,7 @@
 
 ## Sequence and goal
 
-**First, finish the first coding sprint. Then start the seven new tasks below.** The first sprint establishes a working chat with fictional resources and saved history. The next sprint begins the Phase 1 resource catalog, service search, and referral-contact lookup that make the chat useful to staff. Use fictional information during development; staff still make referrals through existing channels.
+**First, finish the first coding sprint. Then start the seven new tasks below.** The first sprint establishes a working chat with fictional resources and saved history. The next sprint adds a small, fictional service catalog that staff can search in the web app and use to look up referral contacts. Use fictional information during development; staff still make referrals through existing channels.
 
 This status is based on the `origin` branches reviewed October 30, 2026 and the [first coding sprint guide](first-coding-sprint.md). A branch draft is not finished merely because code exists on the branch; it needs to work with the rest of the application.
 
@@ -24,34 +24,36 @@ The two UI branches both modify `apps/web/src/app/page.tsx`; combine those chang
 
 ## Part 2 — Seven independent tasks for the next sprint
 
-**Start these after Part 1 is complete.** Each task is a separate, roughly **2.5-hour** assignment. Any teammate can take any row, work in their own branch, and meet its pass condition with local fixtures or fakes. No row requires another row to be finished first. Integration of the seven results happens after the individual tasks are reviewed.
+**Start these after Part 1 is complete.** The next sprint has **three backend tasks and four frontend tasks**, each about **2.5 hours**. Each owner can finish a row in their own branch using inline sample data or a fake provider. Connecting the rows is a separate integration step.
 
-### Shared contract for independent work
+This sprint uses a JSON catalog so the team can deliver a visible search and contact lookup with less setup. A Supabase catalog migration and chat-agent catalog tools can follow after this workflow has been reviewed with staff. The first-sprint `apps/api/app/data/resources.json` remains the chat agent's fictional prompt data for now.
 
-Use this contract for all seven tasks so people can work without waiting for a schema decision:
+### Shared contract
 
-- A **service** has `service_id` (UUID), `name`, `description`, `keywords` (list of strings), `is_active`, `resource_type` (`internal` or `external`), and nullable `program_name`, `target_population`, `eligibility`, and `referral_instruction`.
-- A **contact** has `person_id` (UUID), `service_id` (UUID), and nullable `person_name`, `person_email`, `person_phone`, `person_team`, and `person_service_description`. A service may have zero or more contacts.
-- Search takes `query: str` and `limit: int` and returns ordered service summaries. Detail lookup takes `service_id: str` and returns one service with its contacts, or a not-found result. Unknown contact or referral details remain absent; no code invents them.
+Use the same field names across the JSON, API, and web app:
 
-These fields extend the proposed model in `design/architecture_diagram.md` with eligibility and internal/external status from the Phase 1 product summary. The contract is fixed for this sprint; any change should be agreed by all task owners before implementation.
+- A service has `service_id` (UUID), `name`, `description`, `keywords` (strings), `is_active`, and `resource_type` (`internal` or `external`). `program_name`, `target_population`, `eligibility`, and `referral_instruction` may be null.
+- A contact has `person_id` (UUID) and nullable `person_name`, `person_email`, `person_phone`, `person_team`, and `person_service_description`. Each service has a `contacts` array, which may be empty.
+- `GET /services?q=...` returns an ordered list of active service summaries. `GET /services/{service_id}` returns one service with its contacts, or 404. Unknown instructions or contact details stay null and are labeled plainly in the UI.
 
-### Starter files and task locations
+### Tasks, files, and pass conditions
 
-No shared starter implementation is required before people take these tasks. Each owner creates the files for their row in their own branch. Paths marked **new** and the `apps/api/migrations/` and `apps/api/tests/` directories do not exist on `main` yet.
+All listed files are new unless marked **change**. Owners create their files in their own branches; no shared starter implementation is needed first. The `apps/api/tests/` directory does not exist on `main` yet.
 
-| Task | Files to create or change | Scope and logic location (about 2.5 hours) | Local pass condition | Later integration point |
-| --- | --- | --- | --- | --- |
-| 1. **Catalog tables** | **New:** `apps/api/migrations/<timestamp>_services_people.sql` | Define `services` and `people` with UUID keys, `people.service_id` foreign key, string-array keywords, active and resource type fields, and nullable unknown fields. Use a timestamp after the first-sprint chat migration. Work only in SQL. | Apply to an empty local Postgres/Supabase database; insert and read one service with two contacts. | Database backing search and contact lookup. |
-| 2. **Fictional catalog fixtures** | **New:** `apps/api/app/data/catalog.json` and `apps/api/tests/test_catalog_fixture.py` (or a validation script in `apps/api/`) | Store fictional services and contacts in JSON. Cover internal/external, active/inactive, multiple contacts, and missing details. Leave the first-sprint `resources.json` unchanged. | Check required fields, UUIDs, contact-to-service IDs, and coverage without Task 1's tables. | Seed data and repeatable search/display examples. |
-| 3. **Service search ranking** | **New:** `apps/api/app/services/service_search.py` and `apps/api/tests/test_service_search.py` | Implement a pure `search_services(records, query, limit)` function. Filter inactive records; rank name, keyword, then description matches with deterministic ties; apply the limit. Keep database access out. | Inline-record tests cover known names, need/keyword matches, no match, inactive exclusion, and limit. | Rank candidate rows from the repository. |
-| 4. **Service/contact detail lookup** | **New:** `apps/api/app/repositories/catalog.py` and `apps/api/tests/test_catalog_repository.py` | Put read-only `get_service(service_id)` in `CatalogRepository`. Read the service and its `people` rows in stable order, such as `person_id`. Leave `repositories/chats.py` alone. | Fake-client checks cover two ordered contacts, zero contacts, and an unknown ID; no Task 1 migration is needed. | Supply details and referral contacts. |
-| 5. **Catalog API contract** | **New:** `apps/api/app/schemas/catalog.py`, `apps/api/app/routers/catalog.py`, `apps/api/tests/test_catalog_routes.py`; **change:** `apps/api/app/dependencies.py`, `apps/api/app/main.py` | Define typed summary, detail, and contact responses in the schema. Add `GET /services?q=...` and `GET /services/{service_id}` in the router; add an overridable provider dependency and register the router. Use a fake provider without importing Tasks 3 or 4. | Route checks cover a result list, empty search, detail with contacts, and 404. | HTTP boundary for the web app and repository wiring. |
-| 6. **Service result display** | **New:** `apps/web/src/components/ServiceResult.tsx` | Define local TypeScript props matching the contract. Render name, program, description, instructions, and zero or more contacts. Keep the component off the chat page for this task. | Check one, multiple, and no contacts plus missing instructions using sample props; run `npm run typecheck`. | Present recommendations and contact details. |
-| 7. **Agent catalog tool adapters** | **New:** `apps/api/app/services/catalog_provider.py`, `apps/api/app/services/catalog_tools.py`, `apps/api/tests/test_catalog_tools.py` | Put the `search(query, limit)`/`get_service(service_id)` provider interface in `catalog_provider.py`; put bounded, read-only tool functions and argument checks in `catalog_tools.py`. Test with a fake provider. | Cover results, no match/not found, empty query, and excessive limit; return only supplied catalog data. | Register tools with `ResourceAgent` during integration. |
+| Task | Files to create or change | Work and logic location | Done when |
+| --- | --- | --- | --- |
+| 1. **Fictional catalog data** (backend) | `apps/api/app/data/catalog.json`; `apps/api/tests/test_catalog_fixture.py` | Add a few fictional services with nested contacts. Include internal and external services, an inactive service, multiple contacts, and missing referral details. Keep the first-sprint resource file separate. | A small check validates required fields and UUIDs; all records are fictional. |
+| 2. **Catalog search and lookup** (backend) | `apps/api/app/services/catalog.py`; `apps/api/tests/test_catalog.py` | Write pure functions to search a passed list of services and look up one by ID. Search only active services; match name, keywords, and description in a stable order; apply a result limit. Do not read a database or import Task 1's file in these functions. | Inline-data tests cover a name match, keyword match, no match, inactive exclusion, limit, and unknown ID. |
+| 3. **Catalog API** (backend) | `apps/api/app/schemas/catalog.py`, `apps/api/app/routers/catalog.py`, `apps/api/tests/test_catalog_routes.py`; **change:** `apps/api/app/main.py` | Define typed summary, detail, and contact responses. Add the two read-only routes, define an overridable catalog provider in the router, and register it in `main.py`. Route checks use a fake provider without waiting for Tasks 1 or 2. | Route checks cover results, empty search, detail with contacts, and 404. |
+| 4. **Web catalog API client** (frontend) | `apps/web/src/lib/catalog.ts` | Define TypeScript types for the shared response shapes and functions to request the search and detail routes. Use `NEXT_PUBLIC_API_BASE_URL` as the existing web API contract specifies. Handle failed responses with a useful error. | Typecheck passes; a small mock-response check or local call confirms both functions read the expected shapes. |
+| 5. **Search box and states** (frontend) | `apps/web/src/components/ServiceSearch.tsx` | Build a standalone search form that accepts a query and calls an `onSearch` prop. Show loading, error, and no-results states from props. Do not wire the page or API here. | With sample props, a user can submit a query and see each state clearly. |
+| 6. **Service result card** (frontend) | `apps/web/src/components/ServiceCard.tsx` | Build a standalone card for a service summary: name, program when present, description, and internal/external label. Provide an `onSelect` prop for opening details. | Sample cards show internal and external services, a missing program, and a working select action. |
+| 7. **Contact detail panel** (frontend) | `apps/web/src/components/ServiceDetail.tsx` | Build a standalone detail view for one service, its referral instruction, and its contacts. Label missing instructions and contact information plainly. | Sample details show one, multiple, and no contacts without inventing information. |
 
-Task 5's HTTP provider and Task 7's agent provider can each use a small local interface for testing. During integration, make both call the same catalog repository and response mapping. The current API test dependency is optional (`python -m pip install -e '.[dev]'` from `apps/api`); the web app has no component-test runner configured, so Task 6 can check its sample states in a local preview.
+The API's optional test dependency can be installed with `python -m pip install -e '.[dev]'` from `apps/api`. The web app has no component-test runner configured; frontend owners can check sample states in a local preview and run `npm run typecheck`.
 
 ## Integration after individual tasks
 
-Once the seven tasks pass locally, connect the catalog tables and fixtures to a read-only repository, connect that repository to the API and agent tools, and use the API response in the service display component. The search-ranking function can rank candidate rows from the repository. Then test the staff flow: ask about a need, inspect a specific service and its referral contact, ask a follow-up, and see an honest no-match or missing-contact answer. This integration is necessary for Phase 1, but it is not hidden inside any one 2.5-hour assignment.
+Connect the JSON file to the search/lookup functions and API routes. Then add a catalog page at `apps/web/src/app/services/page.tsx` that uses the web API client and the three new components. Test a staff flow: search for a need, choose a service, inspect known referral contacts, and see clear no-match and missing-detail states. Link to the catalog from the chat page once the first-sprint UI is stable.
+
+This produces a usable, read-only catalog search in the web app. Moving the catalog to Supabase and letting the chat agent use catalog tools are later steps, after the team validates the catalog fields and staff experience.
