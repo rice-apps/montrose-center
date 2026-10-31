@@ -15,15 +15,18 @@ export default function Page() {
   const handleSelect = (chatId: string) => {
     setActiveChatId(chatId)
   }
+  const handleNewChat = () => {
+    setActiveChatId(null)
+   }
 
   return (
-    <main>
+    <main style={{ backgroundColor: "gray", minHeight: "100vh", padding:"16px"}}>
       <h1>Montrose resource chat</h1>
       <p>First sprint scaffold. Build the chat page from the component signatures in src/components.</p>
       <ChatSidebar chats={fakeChats} 
       activeChatId={activeChatId} 
       onSelectChat={handleSelect} 
-      onNewChat={()=> {}}/>
+      onNewChat={handleNewChat}/>
       <p>chat's id: {activeChatId}</p>
     </main>
   );

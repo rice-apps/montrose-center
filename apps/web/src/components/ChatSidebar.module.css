@@ -1,0 +1,129 @@
+:root {
+    --primary-color: #202020;
+    --secondary-color: #666666;
+
+    --bot-weight: 600;
+    --bot-size: 1.625rem;
+    --bot-lh: 2.375rem;
+
+    --label-weight: 500;
+    --label-size: 0.875rem;
+    --label-lh: 1.25rem;
+
+    --date-weight: 400;
+    --date-size: 0.75rem;
+    --date-lh: 1.125rem;
+
+    --chat-row-weight: 400;
+    --chat-row-size: 0.8125rem;
+    --chat-row-lh: 1.25rem;
+}
+
+.sidebar{
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    height: 868px;
+    padding: 8px;
+    gap: 24px; 
+    background-color: #FFFFFF;
+    color: var(--primary-color);
+
+    .agentName{
+        font-weight: var(--bot-weight);
+        font-size: var(--bot-size);
+        line-height: var(--bot-lh);
+        padding: 8px;
+    }
+
+    .newChat{
+        display:flex;
+        align-items: center;
+
+        width: 224px;
+        height: 46px;
+        padding: 12px;
+        gap: 8px;
+
+        border-radius: 8px;
+        border: 1px solid #E5E5E5;
+        background-color: #FFFFFF;
+        
+        svg {
+            height: var(--label-lh);
+            width: var(--label-lh);
+            stroke: var(--primary-color);
+            }
+    }
+    .recentChats{
+        display: flex;
+        flex-direction: column;
+        width: 224px;
+        height: 466px;
+        padding: 0px;
+        gap: 16px;
+
+        .heading{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 224px;
+            height: 20px;
+            gap: 8;
+            padding: 0px 8px;
+
+            svg {
+            height: 16px;
+            width: 16px;
+            stroke: var(--secondary-color);
+            }
+        }
+
+    }
+
+    .blankSpace{
+        width: 224px;
+        height: 138px;
+        gap: 8px;
+    }
+    .yourAccount{
+        display:flex;
+        align-items: center;
+
+        max-width: 224px;
+        height: 46px;
+        padding: 12px;
+        gap: 8px;
+
+        p.label{
+            width: 132px;
+        }
+        
+        .iconCircle{
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #F3F3F3;            
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        svg {
+            height: var(--label-lh);
+            width: var(--label-lh);
+            stroke: var(--secondary-color);
+            }
+    }
+}
+
+.sidebar button{
+    font: inherit;
+
+}
+
+p.label{
+    font-weight: var(--label-weight);
+    font-size: var(--label-size);
+    line-height: var(--label-lh); 
+    margin: 0; 
+}
