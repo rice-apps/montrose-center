@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --animate-dot: dot 1s ease-in-out infinite;
+  --animate-message-in: message-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-word-in: word-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.3s ease-out both;
+  --animate-caret: caret 1s ease-in-out infinite;
+
+  @keyframes dot {
+    0%, 60%, 100% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes message-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes word-in {
+    from {
+      opacity: 0;
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes caret {
+    0%, 100% {
+      opacity: 0.2;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+body {
+  background-color: #FCFCFC;
+}
+
+/* Thin, unobtrusive scrollbar for the chat log */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d4 transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
