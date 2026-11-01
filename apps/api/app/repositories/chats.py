@@ -1,6 +1,4 @@
-"""Task 6: persist chats and messages in Supabase."""
-
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from supabase import Client
@@ -22,6 +20,16 @@ def _to_summary(row: dict) -> ChatSummary:
     )
 
 
+def _new_message(chat_id: str, content: str, is_agent: bool, at: datetime) -> dict:
+    return {
+        "message_id": str(uuid4()),
+        "chat_id": chat_id,
+        "content": content,
+        "is_agent": is_agent,
+        "time_stamp": at.isoformat(),
+    }
+
+
 def _to_message(row: dict) -> Message:
     return Message(
         id=row["message_id"],
@@ -39,7 +47,7 @@ class ChatRepository:
     def create_chat(self, title: str) -> Chat:
         now = _now()
         row = (
-            self.client.table("chat_history")
+            self.client.table("chats")
             .insert(
                 {
                     "chat_id": str(uuid4()),
@@ -55,7 +63,7 @@ class ChatRepository:
 
     def list_chats(self) -> list[ChatSummary]:
         rows = (
-            self.client.table("chat_history")
+            self.client.table("chats")
             .select("chat_id, description, time_stamp, last_updated")
             .order("last_updated", desc=True)
             .execute()
@@ -65,7 +73,7 @@ class ChatRepository:
 
     def get_chat(self, chat_id: str) -> Chat:
         rows = (
-            self.client.table("chat_history")
+            self.client.table("chats")
             .select("*, messages(*)")
             .eq("chat_id", chat_id)
             .order("time_stamp", foreign_table="messages")
@@ -85,7 +93,7 @@ class ChatRepository:
 
     def update_chat_title(self, chat_id: str, title: str) -> Chat:
         (
-            self.client.table("chat_history")
+            self.client.table("chats")
             .update({"description": title})
             .eq("chat_id", chat_id)
             .execute()
@@ -93,13 +101,25 @@ class ChatRepository:
         return self.get_chat(chat_id)
 
     def append_exchange(self, chat_id: str, user_text: str, assistant_text: str) -> SendMessageResponse:
-        # Separate timestamps 
-        user_row = self._insert_message(chat_id, user_text, is_agent=False)
-        assistant_row = self._insert_message(chat_id, assistant_text, is_agent=True)
+        sent_at = datetime.now(timezone.utc)
+        answered_at = sent_at + timedelta(microseconds=1)
+        rows = (
+            self.client.table("messages")
+            .insert(
+                [
+                    _new_message(chat_id, user_text, is_agent=False, at=sent_at),
+                    _new_message(chat_id, assistant_text, is_agent=True, at=answered_at),
+                ]
+            )
+            .execute()
+            .data
+        )
+        user_row = next(row for row in rows if not row["is_agent"])
+        assistant_row = next(row for row in rows if row["is_agent"])
 
         (
-            self.client.table("chat_history")
-            .update({"last_updated": assistant_row["time_stamp"]})
+            self.client.table("chats")
+            .update({"last_updated": answered_at.isoformat()})
             .eq("chat_id", chat_id)
             .execute()
         )
@@ -107,20 +127,4 @@ class ChatRepository:
         return SendMessageResponse(
             user_message=_to_message(user_row),
             assistant_message=_to_message(assistant_row),
-        )
-
-    def _insert_message(self, chat_id: str, content: str, is_agent: bool) -> dict:
-        return (
-            self.client.table("messages")
-            .insert(
-                {
-                    "message_id": str(uuid4()),
-                    "chat_id": chat_id,
-                    "content": content,
-                    "is_agent": is_agent,
-                    "time_stamp": _now(),
-                }
-            )
-            .execute()
-            .data[0]
         )
