@@ -1,0 +1,151 @@
+/* Outer card: width 692, radius/12, 1px border, white (color/paper) */
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 692px;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden; /* keeps the open area inside the rounded corners */
+}
+
+/* The 56px row (54 + 1px border top and bottom); padding/gap space/0 */
+.row {
+  all: unset; /* removes the browser's default button styles */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  width: 100%;
+  height: 54px;
+  cursor: pointer;
+  font-family: Inter, system-ui, sans-serif;
+}
+.row:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+
+/* Slots give the spacing around the badge and arrow, since the row has no padding */
+.badgeSlot {
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 64px;
+}
+.chevronSlot {
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 56px;
+}
+
+/* Number badge: 32×32, radius/8, padding space/4, Inter SemiBold 16/22 */
+.badge {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  gap: 0;
+  border-radius: 8px;
+  background: #f2f2f2;
+  color: #6b6b6b;
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  letter-spacing: 0;
+}
+
+/* Text column: fills the space between badge and arrow */
+.text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0; /* lets long text get cut off with "…" */
+}
+.titleLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  color: #1a1a1a;
+}
+.subtitle {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 18px;
+  color: #6b6b6b;
+}
+.program {
+  color: #3d3d3d;
+}
+
+/* Internal / external label */
+.internal,
+.external {
+  flex-shrink: 0;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.internal {
+  background: #eef2ff;
+  color: #4338ca;
+}
+.external {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+/* Arrow box: 32×32, radius/8, padding space/4 */
+.chevron {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  gap: 0;
+  border-radius: 8px;
+  background: #f2f2f2;
+  color: #1a1a1a;
+}
+.row:hover .chevron {
+  background: #e8e8e8;
+}
+.chevron svg {
+  display: block;
+  transition: transform 150ms ease;
+}
+.flipped {
+  transform: rotate(180deg);
+}
+
+/* Open area under the row */
+.details {
+  padding: 8px 16px 16px 64px; /* lines up with the text above */
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: #3d3d3d;
+}
