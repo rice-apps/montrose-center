@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
+from supabase import PostgrestAPIError
 
 from app.repositories.chats import ChatRepository
 
@@ -171,40 +172,59 @@ def test_update_chat_title_missing_raises_lookup_error():
         ChatRepository(client).update_chat_title(CHAT_ID, "Renamed")
 
 
-def test_append_exchange_saves_both_messages_in_one_insert():
-    # The insert returns exactly the rows it was sent, the way Supabase does.
-    client = FakeClient(lambda query: [dict(row) for row in query.arg("insert")], [chat_row()])
+def echo_insert(query: FakeQuery) -> list[dict]:
+    # The insert returns exactly the row it was sent, the way Supabase does.
+    return [dict(query.arg("insert"))]
 
-    response = ChatRepository(client).append_exchange(CHAT_ID, "Question?", "Answer.")
+
+def raise_db_error(code: str):
+    def fail(query: FakeQuery):
+        raise PostgrestAPIError({"code": code, "message": "database error"})
+
+    return fail
+
+
+def test_insert_message_saves_one_message_and_updates_chat():
+    client = FakeClient(echo_insert, [chat_row()])
+
+    message = ChatRepository(client).insert_message(CHAT_ID, "Question?", is_agent=False)
 
     messages_query, chats_query = client.queries
-    inserted = messages_query.arg("insert")
+    row = messages_query.arg("insert")
     assert messages_query.table == "messages"
-    assert len(client.queries) == 2  # one insert for both messages, one chat update
-    assert [(row["is_agent"], row["content"]) for row in inserted] == [(False, "Question?"), (True, "Answer.")]
-    assert all(row["chat_id"] == CHAT_ID for row in inserted)
-
-    asked = datetime.fromisoformat(inserted[0]["time_stamp"])
-    answered = datetime.fromisoformat(inserted[1]["time_stamp"])
-    assert answered > asked  # the answer always sorts after the question
-    assert asked.tzinfo is not None  # timestamps carry a timezone
+    assert (row["chat_id"], row["content"], row["is_agent"]) == (CHAT_ID, "Question?", False)
+    UUID(row["message_id"])  # raises if the generated ID is not a valid UUID
+    assert datetime.fromisoformat(row["time_stamp"]).tzinfo is not None  # timestamps carry a timezone
 
     assert chats_query.table == "chats"
-    assert chats_query.arg("update") == {"last_updated": inserted[1]["time_stamp"]}
-    assert response.user_message.role == "user"
-    assert response.user_message.content == "Question?"
-    assert response.assistant_message.role == "assistant"
-    assert response.assistant_message.content == "Answer."
+    assert chats_query.arg("update") == {"last_updated": row["time_stamp"]}
+    assert ("eq", ("chat_id", CHAT_ID), {}) in chats_query.calls
+
+    assert message.id == row["message_id"]
+    assert (message.chat_id, message.role, message.content) == (CHAT_ID, "user", "Question?")
+    assert message.created_at == row["time_stamp"]
 
 
-def test_append_exchange_matches_rows_even_if_returned_out_of_order():
-    returned = [
-        message_row("m2", True, "Answer.", "2026-10-31T16:01:00.000001+00:00"),
-        message_row("m1", False, "Question?", "2026-10-31T16:01:00+00:00"),
-    ]
-    client = FakeClient(returned, [chat_row()])
+def test_insert_message_from_agent_has_assistant_role():
+    client = FakeClient(echo_insert, [chat_row()])
 
-    response = ChatRepository(client).append_exchange(CHAT_ID, "Question?", "Answer.")
+    message = ChatRepository(client).insert_message(CHAT_ID, "Answer.", is_agent=True)
 
-    assert response.user_message.id == "m1"
-    assert response.assistant_message.id == "m2"
+    assert client.queries[0].arg("insert")["is_agent"] is True
+    assert message.role == "assistant"
+
+
+def test_insert_message_missing_chat_raises_lookup_error():
+    client = FakeClient(raise_db_error("23503"))  # foreign key violation: no such chat
+
+    with pytest.raises(LookupError):
+        ChatRepository(client).insert_message(CHAT_ID, "Question?", is_agent=False)
+
+    assert len(client.queries) == 1  # the chat update never runs
+
+
+def test_insert_message_other_database_errors_are_not_hidden():
+    client = FakeClient(raise_db_error("23502"))  # not-null violation
+
+    with pytest.raises(PostgrestAPIError):
+        ChatRepository(client).insert_message(CHAT_ID, "Question?", is_agent=False)

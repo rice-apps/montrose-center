@@ -62,8 +62,11 @@ def test_chat_round_trip(repo: ChatRepository):
     assert chat.messages == []
     assert chat.created_at.endswith("+00:00")  # stored with a timezone
 
-    repo.append_exchange(chat.id, "TEST question", "TEST answer")
-    repo.append_exchange(chat.id, "TEST follow-up", "TEST follow-up answer")
+    question = repo.insert_message(chat.id, "TEST question", is_agent=False)
+    assert (question.role, question.content, question.chat_id) == ("user", "TEST question", chat.id)
+    repo.insert_message(chat.id, "TEST answer", is_agent=True)
+    repo.insert_message(chat.id, "TEST follow-up", is_agent=False)
+    repo.insert_message(chat.id, "TEST follow-up answer", is_agent=True)
     saved = repo.get_chat(chat.id)
 
     assert [(m.role, m.content) for m in saved.messages] == [
@@ -87,9 +90,15 @@ def test_missing_chat_raises_lookup_error(repo: ChatRepository):
         repo.get_chat("00000000-0000-0000-0000-000000000000")
 
 
+def test_insert_message_into_missing_chat_raises_lookup_error(repo: ChatRepository):
+    with pytest.raises(LookupError):
+        repo.insert_message("00000000-0000-0000-0000-000000000000", "TEST orphan", is_agent=False)
+
+
 def test_deleting_chat_deletes_its_messages(repo: ChatRepository, client: Client):
     chat = repo.create_chat("TEST cascade (safe to delete)")
-    repo.append_exchange(chat.id, "TEST question", "TEST answer")
+    repo.insert_message(chat.id, "TEST question", is_agent=False)
+    repo.insert_message(chat.id, "TEST answer", is_agent=True)
 
     client.table("chats").delete().eq("chat_id", chat.id).execute()
 

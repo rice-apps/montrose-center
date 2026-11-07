@@ -1,9 +1,12 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from uuid import uuid4
 
-from supabase import Client
+from supabase import Client, PostgrestAPIError
 
-from app.schemas.chats import Chat, ChatSummary, Message, SendMessageResponse
+from app.schemas.chats import Chat, ChatSummary, Message
+
+# Postgres error code for a foreign key violation.
+FOREIGN_KEY_VIOLATION = "23503"
 
 
 def _now() -> str:
@@ -18,16 +21,6 @@ def _to_summary(row: dict) -> ChatSummary:
         created_at=row["time_stamp"],
         updated_at=row["last_updated"],
     )
-
-
-def _new_message(chat_id: str, content: str, is_agent: bool, at: datetime) -> dict:
-    return {
-        "message_id": str(uuid4()),
-        "chat_id": chat_id,
-        "content": content,
-        "is_agent": is_agent,
-        "time_stamp": at.isoformat(),
-    }
 
 
 def _to_message(row: dict) -> Message:
@@ -100,31 +93,33 @@ class ChatRepository:
         )
         return self.get_chat(chat_id)
 
-    def append_exchange(self, chat_id: str, user_text: str, assistant_text: str) -> SendMessageResponse:
-        sent_at = datetime.now(timezone.utc)
-        answered_at = sent_at + timedelta(microseconds=1)
-        rows = (
-            self.client.table("messages")
-            .insert(
-                [
-                    _new_message(chat_id, user_text, is_agent=False, at=sent_at),
-                    _new_message(chat_id, assistant_text, is_agent=True, at=answered_at),
-                ]
+    def insert_message(self, chat_id: str, content: str, is_agent: bool) -> Message:
+        sent_at = _now()
+        try:
+            row = (
+                self.client.table("messages")
+                .insert(
+                    {
+                        "message_id": str(uuid4()),
+                        "chat_id": chat_id,
+                        "content": content,
+                        "is_agent": is_agent,
+                        "time_stamp": sent_at,
+                    }
+                )
+                .execute()
+                .data[0]
             )
-            .execute()
-            .data
-        )
-        user_row = next(row for row in rows if not row["is_agent"])
-        assistant_row = next(row for row in rows if row["is_agent"])
+        except PostgrestAPIError as error:
+            if error.code == FOREIGN_KEY_VIOLATION:  # no chat has this chat_id
+                raise LookupError(f"Chat {chat_id} not found") from error
+            raise
 
+        # Sending a message moves the chat to the top of the sidebar.
         (
             self.client.table("chats")
-            .update({"last_updated": answered_at.isoformat()})
+            .update({"last_updated": sent_at})
             .eq("chat_id", chat_id)
             .execute()
         )
-
-        return SendMessageResponse(
-            user_message=_to_message(user_row),
-            assistant_message=_to_message(assistant_row),
-        )
+        return _to_message(row)
