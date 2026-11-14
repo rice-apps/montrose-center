@@ -6,7 +6,9 @@ from app.services.agent import ResourceAgent
 
 
 class ChatService:
-    def __init__(self, repository: ChatRepository, agent: ResourceAgent) -> None: ...
+    def __init__(self, repository: ChatRepository, agent: ResourceAgent) -> None:
+        self.repository = repository
+        self.agent = agent
 
     # TODO: implement chat creation, reads, title updates, and message handling.
     def create_chat(self, title: str) -> Chat: ...
