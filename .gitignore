@@ -16,4 +16,3 @@ __pycache__/
 *.egg-info/
 *.tsbuildinfo
 .DS_Store
-.claude/
