@@ -27,7 +27,7 @@ def list_chats(service: ChatServiceDep) -> list[ChatSummary]:
     """
     return service.list_chats()
 
-@router.get("", response_model=Chat)
+@router.get("/chat", response_model=Chat)
 def get_chat(chat_id: str, service: ChatServiceDep) -> Chat:
     """ 
     Calls the chat service to get a specified chat
@@ -49,7 +49,7 @@ def update_chat(chat_id: str, payload: ChatUpdate, service: ChatServiceDep) -> C
     if chat is None: raise HTTPException(status_code=404, detail="Chat does not exist")
     return chat
 
-@router.put("", response_model=SendMessageResponse)
+@router.put("/message", response_model=SendMessageResponse)
 async def send_message(
     chat_id: str, payload: MessageCreate, service: ChatServiceDep
 ) -> SendMessageResponse:
@@ -59,5 +59,5 @@ async def send_message(
     Raises a 404 error if the chat of the specified ID does not exist
     """
     message = await service.send_message(chat_id, payload.content)
-    if message is None: raise HTTPException(status_code=404, detail="Cannot send message")
+    if message is None: raise HTTPException(status_code=404, detail="Chat does not exist")
     return message
