@@ -1,4 +1,9 @@
-"""Catalog fields returned by the search tool; contacts are loaded separately."""
+"""Proposed search result derived from docs/coding-sprint-11-07.md.
+
+This is a consumer-facing subset of the planned service catalog, not a schema
+introspected from Supabase. Confirm the fields with the catalog/search owners.
+Contacts are loaded separately; keywords and is_active are query/filter inputs.
+"""
 
 from typing import Literal
 

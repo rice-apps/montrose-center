@@ -35,12 +35,13 @@ Tests under `apps/api/tests/` can use `python -m pip install -e '.[dev]'` from `
 
 The search task has constructor wiring and method signatures ready to fill in:
 
-- `app/schemas/resource_search.py`: `ResourceSearchResult` is the shared return shape for the repository, service, and agent tool. Results contain service facts and nullable descriptive fields; contacts are loaded separately.
+- `app/schemas/resource_search.py`: `ResourceSearchResult` proposes a shared return shape for the repository, service, and agent tool, derived from this document's catalog contract rather than a live Supabase schema. It includes service facts and nullable descriptive fields; contacts are loaded separately. Keywords and the active flag are used for searching/filtering and are omitted from results. Confirm the shape with the catalog and agent-tool owners.
+- `app/interfaces.py`: `ResourceSearchRepositoryProtocol` and `ResourceSearchServiceProtocol` define the search contracts. The service constructor and dependency annotations use these protocols; only providers choose concrete implementations.
 - `app/repositories/resource_search.py`: implement `_to_search_result(row)` and `ResourceSearchRepository.search_services(query, limit=10)` using the injected Supabase client.
 - `app/services/resource_search.py`: implement `ResourceSearchService.search_services(query, limit=10)`, validating a nonblank query and an integer limit of 1–20 before calling the repository. Invalid values should raise `ValueError`; no matches should return `[]`.
 - `app/dependencies.py`: the search providers reuse `get_supabase_client`. Task 2 can inject `get_resource_search_service` and register its `search_services` method as the agent tool. Catalog routes can request `ResourceSearchServiceDep`.
 
-Search and row-mapping methods currently raise `NotImplementedError`. They use synchronous signatures to match the existing Supabase client. No agent tool or HTTP route calls them yet. The current providers follow main's concrete constructor pattern; the interface-based DI work is tracked separately.
+Search and row-mapping methods currently raise `NotImplementedError`. They use synchronous signatures to match the existing Supabase client. No agent tool or HTTP route calls them yet. This scaffold builds on the interface-based DI work.
 
 When implementing the task, handle exact-name priority, keyword/description matches, stable ties, inactive exclusion, null preservation, no matches, invalid queries/limits, and database failures. This scaffold adds no migration folder or test files.
 

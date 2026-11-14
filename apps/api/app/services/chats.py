@@ -1,12 +1,13 @@
 """Task 5: coordinate chat persistence and the agent."""
 
-from app.repositories.chats import ChatRepository
+from app.interfaces import ChatRepositoryProtocol, ResourceAgentProtocol
 from app.schemas.chats import Chat, ChatSummary, SendMessageResponse
-from app.services.agent import ResourceAgent
 
 
 class ChatService:
-    def __init__(self, repository: ChatRepository, agent: ResourceAgent) -> None:
+    def __init__(
+        self, repository: ChatRepositoryProtocol, agent: ResourceAgentProtocol
+    ) -> None:
         self.repository = repository
         self.agent = agent
 

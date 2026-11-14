@@ -1,11 +1,11 @@
 """Task 3: search entry point for the agent tool and catalog API."""
 
-from app.repositories.resource_search import ResourceSearchRepository
+from app.interfaces import ResourceSearchRepositoryProtocol
 from app.schemas.resource_search import ResourceSearchResult
 
 
 class ResourceSearchService:
-    def __init__(self, repository: ResourceSearchRepository) -> None:
+    def __init__(self, repository: ResourceSearchRepositoryProtocol) -> None:
         self.repository = repository
 
     def search_services(self, query: str, limit: int = 10) -> list[ResourceSearchResult]:
