@@ -31,6 +31,20 @@ Owners can build against a fake repository or inline fictional rows before anoth
 
 Tests under `apps/api/tests/` can use `python -m pip install -e '.[dev]'` from `apps/api` and `pytest`. The web app can use `npm run typecheck` and a local preview for page states.
 
+## Task 3 starter scaffold
+
+The search task has constructor wiring and method signatures ready to fill in:
+
+- `app/schemas/resource_search.py`: `ResourceSearchResult` is the shared return shape for the repository, service, and agent tool. Results contain service facts and nullable descriptive fields; contacts are loaded separately.
+- `app/repositories/resource_search.py`: implement `_to_search_result(row)` and `ResourceSearchRepository.search_services(query, limit=10)` using the injected Supabase client.
+- `app/services/resource_search.py`: implement `ResourceSearchService.search_services(query, limit=10)`, validating a nonblank query and an integer limit of 1–20 before calling the repository. Invalid values should raise `ValueError`; no matches should return `[]`.
+- `app/dependencies.py`: the search providers reuse `get_supabase_client`. Task 2 can inject `get_resource_search_service` and register its `search_services` method as the agent tool. Catalog routes can request `ResourceSearchServiceDep`.
+- `supabase/migrations/20261107_02_resource_search.sql`: comments describe the SQL work; there is no executable migration yet. Complete it after Task 5 settles the services table schema, before applying migrations.
+
+Search and row-mapping methods currently raise `NotImplementedError`. They use synchronous signatures to match the existing Supabase client. No agent tool or HTTP route calls them yet. The current providers follow main's concrete constructor pattern; the interface-based DI work is tracked separately.
+
+When implementing the task, cover exact-name priority, keyword/description matches, stable ties, inactive exclusion, null preservation, no matches, invalid queries/limits, and database failures. This scaffold does not add a test file.
+
 ## Integration order and sprint demo
 
 The seven tasks are available in parallel, with fakes where needed. When merging, first settle the `services`/`people` schema and the search return shape. Then connect the resource and search providers to the agent, connect the catalog route to the table, and run the agent evaluation cases against the integrated code. Tasks 1, 2, and 4 may touch files from the October 24 sprint; Task 6 may touch files from October 31. Merge those edits with the existing implementations rather than replacing them.

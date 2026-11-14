@@ -6,8 +6,10 @@ from fastapi import Depends, HTTPException, Request
 from supabase import Client
 
 from app.repositories.chats import ChatRepository
+from app.repositories.resource_search import ResourceSearchRepository
 from app.services.agent import ResourceAgent
 from app.services.chats import ChatService
+from app.services.resource_search import ResourceSearchService
 
 
 def get_supabase_client(request: Request) -> Client:
@@ -36,3 +38,18 @@ def get_chat_service(
 
 # FastAPI reuses the result within one request; the next request gets a new service.
 ChatServiceDep = Annotated[ChatService, Depends(get_chat_service)]
+
+
+def get_resource_search_repository(
+    client: Annotated[Client, Depends(get_supabase_client)],
+) -> ResourceSearchRepository:
+    return ResourceSearchRepository(client)
+
+
+def get_resource_search_service(
+    repository: Annotated[ResourceSearchRepository, Depends(get_resource_search_repository)],
+) -> ResourceSearchService:
+    return ResourceSearchService(repository)
+
+
+ResourceSearchServiceDep = Annotated[ResourceSearchService, Depends(get_resource_search_service)]
