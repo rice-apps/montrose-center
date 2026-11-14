@@ -48,6 +48,9 @@
         border-radius: 8px;
         border: 1px solid #E5E5E5;
         background-color: #FFFFFF;
+
+        cursor: pointer;
+        flex-shrink: 0;
         
         svg {
             height: var(--label-lh);
@@ -58,8 +61,11 @@
     .recentChats{
         display: flex;
         flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
         width: 224px;
-        height: 466px;
+        height: auto;
         padding: 0px;
         gap: 16px;
 
@@ -69,23 +75,60 @@
             justify-content: space-between;
             max-width: 224px;
             height: 20px;
-            gap: 8;
+            gap: 8px;
             padding: 0px 8px;
 
             svg {
-            height: 16px;
-            width: 16px;
-            stroke: var(--secondary-color);
+                height: 16px;
+                width: 16px;
+                stroke: var(--secondary-color);
             }
+        }
+
+        .groupLabel{
+            margin: 0;
+            font-size: var(--date-size);
+            height: 26px;
+        }
+
+        .group{
+            font-weight: var(--chat-row-weight);
+            font-size: var(--chat-row-size);
+            line-height: var(--chat-row-lh);
+            margin-left: 8px;
+            color: var(--secondary-color); 
+
+        }
+
+        .chatList{
+            display: flex;
+            flex-direction: column;
+            list-style: none;
+            padding-inline-start: 0;
+            gap: 4px;
+            margin: 0;
+            
+            svg{
+                height: 16px;
+                width: 16px;
+                stroke: var(--secondary-color);
+            }
+        }
+
+        .listItems{
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 36px;
+            border: none;
+            gap: 8px;
+            background-color: transparent;
+            cursor: pointer;
+            color: var(--secondary-color); 
         }
 
     }
 
-    .blankSpace{
-        width: 224px;
-        height: 138px;
-        gap: 8px;
-    }
     .yourAccount{
         display:flex;
         align-items: center;
@@ -94,6 +137,9 @@
         height: 46px;
         padding: 12px;
         gap: 8px;
+
+        cursor: pointer;
+        flex-shrink: 0;
 
         p.label{
             width: 132px;
