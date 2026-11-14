@@ -1,4 +1,8 @@
-"""Request-scoped chat services using the application's shared Supabase client."""
+"""Bind backend interfaces to request-scoped implementations.
+
+The Supabase client is shared for the application's lifetime. Override these
+provider functions with app.dependency_overrides to substitute implementations.
+"""
 
 import os
 from typing import Annotated
@@ -7,6 +11,7 @@ from fastapi import Depends, HTTPException, Request
 from pydantic_ai.models import Model, infer_model
 from supabase import Client
 
+from app.interfaces import ChatRepositoryProtocol, ChatServiceProtocol, ResourceAgentProtocol
 from app.repositories.chats import ChatRepository
 from app.services.agent import ResourceAgent
 from app.services.chats import ChatService
@@ -21,7 +26,7 @@ def get_supabase_client(request: Request) -> Client:
 
 def get_chat_repository(
     client: Annotated[Client, Depends(get_supabase_client)],
-) -> ChatRepository:
+) -> ChatRepositoryProtocol:
     return ChatRepository(client)
 
 
@@ -37,17 +42,17 @@ def get_model() -> Model:
 
 def get_resource_agent(
     model: Annotated[Model, Depends(get_model)],
-) -> ResourceAgent:
+) -> ResourceAgentProtocol:
     """Give the configured model to the resource agent."""
     return ResourceAgent(model=model)
 
 
 def get_chat_service(
-    repository: Annotated[ChatRepository, Depends(get_chat_repository)],
-    agent: Annotated[ResourceAgent, Depends(get_resource_agent)],
-) -> ChatService:
+    repository: Annotated[ChatRepositoryProtocol, Depends(get_chat_repository)],
+    agent: Annotated[ResourceAgentProtocol, Depends(get_resource_agent)],
+) -> ChatServiceProtocol:
     return ChatService(repository, agent)
 
 
 # FastAPI reuses the result within one request; the next request gets a new service.
-ChatServiceDep = Annotated[ChatService, Depends(get_chat_service)]
+ChatServiceDep = Annotated[ChatServiceProtocol, Depends(get_chat_service)]
