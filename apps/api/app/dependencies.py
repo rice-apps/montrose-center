@@ -4,9 +4,11 @@ The Supabase client is shared for the application's lifetime. Override these
 provider functions with app.dependency_overrides to substitute implementations.
 """
 
+import os
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request
+from pydantic_ai.models import Model, infer_model
 from supabase import Client
 
 from app.interfaces import (
@@ -36,8 +38,21 @@ def get_chat_repository(
     return ChatRepository(client)
 
 
-def get_resource_agent() -> ResourceAgentProtocol:
-    return ResourceAgent()
+def get_model() -> Model:
+    """Create the model selected by application configuration."""
+    model_name = os.getenv("MODEL_NAME", "").strip()
+
+    if not model_name:
+        raise RuntimeError("MODEL_NAME is not configured.")
+
+    return infer_model(model_name)
+
+
+def get_resource_agent(
+    model: Annotated[Model, Depends(get_model)],
+) -> ResourceAgentProtocol:
+    """Give the configured model to the resource agent."""
+    return ResourceAgent(model=model)
 
 
 def get_chat_service(
