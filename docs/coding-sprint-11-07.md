@@ -39,11 +39,10 @@ The search task has constructor wiring and method signatures ready to fill in:
 - `app/repositories/resource_search.py`: implement `_to_search_result(row)` and `ResourceSearchRepository.search_services(query, limit=10)` using the injected Supabase client.
 - `app/services/resource_search.py`: implement `ResourceSearchService.search_services(query, limit=10)`, validating a nonblank query and an integer limit of 1–20 before calling the repository. Invalid values should raise `ValueError`; no matches should return `[]`.
 - `app/dependencies.py`: the search providers reuse `get_supabase_client`. Task 2 can inject `get_resource_search_service` and register its `search_services` method as the agent tool. Catalog routes can request `ResourceSearchServiceDep`.
-- `supabase/migrations/20261107_02_resource_search.sql`: comments describe the SQL work; there is no executable migration yet. Complete it after Task 5 settles the services table schema, before applying migrations.
 
 Search and row-mapping methods currently raise `NotImplementedError`. They use synchronous signatures to match the existing Supabase client. No agent tool or HTTP route calls them yet. The current providers follow main's concrete constructor pattern; the interface-based DI work is tracked separately.
 
-When implementing the task, cover exact-name priority, keyword/description matches, stable ties, inactive exclusion, null preservation, no matches, invalid queries/limits, and database failures. This scaffold does not add a test file.
+When implementing the task, handle exact-name priority, keyword/description matches, stable ties, inactive exclusion, null preservation, no matches, invalid queries/limits, and database failures. This scaffold adds no migration folder or test files.
 
 ## Integration order and sprint demo
 

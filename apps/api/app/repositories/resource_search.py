@@ -19,7 +19,7 @@ class ResourceSearchRepository:
 
     def search_services(self, query: str, limit: int = 10) -> list[ResourceSearchResult]:
         """Return ranked active services for a validated query and limit."""
-        # TODO: call the search function/query from 20261107_02_resource_search.sql.
+        # TODO: call the Supabase search function/query agreed on for this task.
         # Search name, keywords, and description; do not search people/contact data.
         # Exact-name matches first, then text rank, then service_id for stable ties.
         # Filter inactive services and apply the limit in the database.
