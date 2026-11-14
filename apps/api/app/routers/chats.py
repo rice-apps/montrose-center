@@ -27,7 +27,7 @@ def list_chats(service: ChatServiceDep) -> list[ChatSummary]:
     """
     return service.list_chats()
 
-@router.get("/chat", response_model=Chat)
+@router.get("/detail", response_model=Chat)
 def get_chat(chat_id: str, service: ChatServiceDep) -> Chat:
     """ 
     Calls the chat service to get a specified chat
@@ -38,24 +38,24 @@ def get_chat(chat_id: str, service: ChatServiceDep) -> Chat:
     if chat is None: raise HTTPException(status_code=404, detail="Chat does not exist")
     return chat
 
-@router.put("", response_model=Chat)
+@router.patch("", response_model=Chat)
 def update_chat(chat_id: str, payload: ChatUpdate, service: ChatServiceDep) -> Chat:
     """ 
     Calls the chat service to update the title of a specified chat
-    Sends a PUT request to the backend
+    Sends a PATCH request to the backend
     Raises a 404 error if the chat of the specified ID does not exist
     """
     chat = service.update_chat_title(chat_id, payload.title)
     if chat is None: raise HTTPException(status_code=404, detail="Chat does not exist")
     return chat
 
-@router.put("/message", response_model=SendMessageResponse)
+@router.patch("/messages", response_model=SendMessageResponse)
 async def send_message(
     chat_id: str, payload: MessageCreate, service: ChatServiceDep
 ) -> SendMessageResponse:
     """ 
     Calls the chat service to send a message in a specified chat 
-    Sends a PUT request to the backend
+    Sends a PATCH request to the backend
     Raises a 404 error if the chat of the specified ID does not exist
     """
     message = await service.send_message(chat_id, payload.content)
