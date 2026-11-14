@@ -31,6 +31,20 @@ Owners can build against a fake repository or inline fictional rows before anoth
 
 Tests under `apps/api/tests/` can use `python -m pip install -e '.[dev]'` from `apps/api` and `pytest`. The web app can use `npm run typecheck` and a local preview for page states.
 
+## Task 3 starter scaffold
+
+The search task has constructor wiring and method signatures ready to fill in. For Task 3, the actual program fields supplied on November 14 supersede the earlier proposed service schema above: Program Name, Active, How to Refer, Population Served, Eligibility Criteria, Program Contacts, Program Definition, and Keyword1 through Keyword10. An ID and internal/external type were not supplied and are not assumed.
+
+- `app/schemas/resource_search.py`: `ResourceSearchResult` uses Python names for the supplied program fields. Every field is required and non-null, including `program_contacts` as text containing names/contact details and `keywords` as a `list[str]` combining the source keyword columns. Fields have no defaults. Column mapping and source storage types must be confirmed when implementing the repository.
+- `app/interfaces.py`: `ResourceSearchRepositoryProtocol` and `ResourceSearchServiceProtocol` define the search contracts. The service constructor and dependency annotations use these protocols; only providers choose concrete implementations.
+- `app/repositories/resource_search.py`: implement `_to_search_result(row)` and `ResourceSearchRepository.search_services(query, limit=10)` using the injected Supabase client.
+- `app/services/resource_search.py`: implement `ResourceSearchService.search_services(query, limit=10)`, validating a nonblank query and an integer limit of 1–20 before calling the repository. Invalid values should raise `ValueError`; no matches should return `[]`.
+- `app/dependencies.py`: the search providers reuse `get_supabase_client`. Task 2 can inject `get_resource_search_service` and register its `search_services` method as the agent tool. Catalog routes can request `ResourceSearchServiceDep`.
+
+Search and row-mapping methods currently raise `NotImplementedError`. They use synchronous signatures to match the existing Supabase client. No agent tool or HTTP route calls them yet. This scaffold builds on the interface-based DI work.
+
+Search Program Name, Program Definition, and Keyword1 through Keyword10; filter to Active = true. When implementing the task, handle exact-name priority, keyword/definition matches, stable ties, inactive exclusion, required result fields, no matches, invalid queries/limits, and database failures. Confirm a stable database row key for tie-breaking rather than assuming a `service_id`. This scaffold adds no migration folder or test files.
+
 ## Integration order and sprint demo
 
 The seven tasks are available in parallel, with fakes where needed. When merging, first settle the `services`/`people` schema and the search return shape. Then connect the resource and search providers to the agent, connect the catalog route to the table, and run the agent evaluation cases against the integrated code. Tasks 1, 2, and 4 may touch files from the October 24 sprint; Task 6 may touch files from October 31. Merge those edits with the existing implementations rather than replacing them.

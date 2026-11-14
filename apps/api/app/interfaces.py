@@ -8,6 +8,7 @@ of the contracts so providers can supply real implementations or test doubles.
 from typing import Protocol
 
 from app.schemas.chats import Chat, ChatSummary, Message, SendMessageResponse
+from app.schemas.resource_search import ResourceSearchResult
 
 
 class ChatRepositoryProtocol(Protocol):
@@ -42,3 +43,15 @@ class ChatServiceProtocol(Protocol):
     def update_chat_title(self, chat_id: str, title: str) -> Chat: ...
 
     async def send_message(self, chat_id: str, content: str) -> SendMessageResponse: ...
+
+
+class ResourceSearchRepositoryProtocol(Protocol):
+    """Ranked catalog reads needed by the search service."""
+
+    def search_services(self, query: str, limit: int = 10) -> list[ResourceSearchResult]: ...
+
+
+class ResourceSearchServiceProtocol(Protocol):
+    """Validated search operation exposed to the agent tool and catalog API."""
+
+    def search_services(self, query: str, limit: int = 10) -> list[ResourceSearchResult]: ...

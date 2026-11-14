@@ -11,10 +11,18 @@ from fastapi import Depends, HTTPException, Request
 from pydantic_ai.models import Model, infer_model
 from supabase import Client
 
-from app.interfaces import ChatRepositoryProtocol, ChatServiceProtocol, ResourceAgentProtocol
+from app.interfaces import (
+    ChatRepositoryProtocol,
+    ChatServiceProtocol,
+    ResourceAgentProtocol,
+    ResourceSearchRepositoryProtocol,
+    ResourceSearchServiceProtocol,
+)
 from app.repositories.chats import ChatRepository
+from app.repositories.resource_search import ResourceSearchRepository
 from app.services.agent import ResourceAgent
 from app.services.chats import ChatService
+from app.services.resource_search import ResourceSearchService
 
 
 def get_supabase_client(request: Request) -> Client:
@@ -56,3 +64,22 @@ def get_chat_service(
 
 # FastAPI reuses the result within one request; the next request gets a new service.
 ChatServiceDep = Annotated[ChatServiceProtocol, Depends(get_chat_service)]
+
+
+def get_resource_search_repository(
+    client: Annotated[Client, Depends(get_supabase_client)],
+) -> ResourceSearchRepositoryProtocol:
+    return ResourceSearchRepository(client)
+
+
+def get_resource_search_service(
+    repository: Annotated[
+        ResourceSearchRepositoryProtocol, Depends(get_resource_search_repository)
+    ],
+) -> ResourceSearchServiceProtocol:
+    return ResourceSearchService(repository)
+
+
+ResourceSearchServiceDep = Annotated[
+    ResourceSearchServiceProtocol, Depends(get_resource_search_service)
+]
