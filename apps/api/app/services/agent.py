@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import os
 from pathlib import Path
 
 from pydantic_ai import Agent
@@ -13,8 +12,7 @@ from pydantic_ai.messages import (
     TextPart,
     UserPromptPart,
 )
-from pydantic_ai.models.google import GoogleModel
-from pydantic_ai.providers.google import GoogleProvider
+from pydantic_ai.models import Model
 
 from app.schemas.chats import Message
 
@@ -65,10 +63,10 @@ def to_model_messages(history: list[Message]) -> list[ModelMessage]:
 class ResourceAgent:
     def __init__(
         self,
-        model_name: str | None = None,
+        model: Model,
         catalog_path: Path | None = None,
     ) -> None:
-        self.model_name = model_name
+        self.model = model
         self.catalog_path = catalog_path or DEFAULT_CATALOG_PATH
         self.catalog = load_catalog_from_json(self.catalog_path)
         self.system_prompt = self.build_system_prompt()
@@ -101,23 +99,11 @@ class ResourceAgent:
         history: list[Message],
         user_text: str,
     ) -> str:
-        """Send the question and earlier messages to Gemini."""
-        model_name = (
-            self.model_name or os.getenv("GEMINI_MODEL", "")
-        ).strip()
-        api_key = os.getenv("GEMINI_API_KEY", "").strip()
-
-        if not model_name:
-            raise RuntimeError("GEMINI_MODEL is not configured.")
-
-        if not api_key:
-            raise RuntimeError("GEMINI_API_KEY is not configured.")
-
-        model = GoogleModel(
-            model_name,
-            provider=GoogleProvider(api_key=api_key),
+        """Answer using the supplied model and earlier messages."""
+        agent = Agent(
+            self.model,
+            instructions=self.system_prompt,
         )
-        agent = Agent(model, instructions=self.system_prompt)
 
         result = await agent.run(
             user_text,
@@ -129,10 +115,13 @@ class ResourceAgent:
 if __name__ == "__main__":
     from dotenv import load_dotenv
 
+    from app.dependencies import get_model
+
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
     async def test_agent() -> None:
-        agent = ResourceAgent()
+        model = get_model()
+        agent = ResourceAgent(model=model)
 
         question = "Is there housing help?"
         answer = await agent.respond([], question)
