@@ -1,6 +1,5 @@
 """Task 7: build a prompt from fictional data and call an LLM."""
 
-import asyncio
 import json
 from pathlib import Path
 
@@ -110,50 +109,3 @@ class ResourceAgent:
             message_history=to_model_messages(history),
         )
         return result.output
-
-
-if __name__ == "__main__":
-    from dotenv import load_dotenv
-
-    from app.dependencies import get_model
-
-    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-
-    async def test_agent() -> None:
-        model = get_model()
-        agent = ResourceAgent(model=model)
-
-        question = "Is there housing help?"
-        answer = await agent.respond([], question)
-        print("FIRST ANSWER:\n", answer)
-
-        history = [
-            Message(
-                id="1",
-                chat_id="test",
-                role="user",
-                content=question,
-                created_at="2026-10-31T00:00:00Z",
-            ),
-            Message(
-                id="2",
-                chat_id="test",
-                role="assistant",
-                content=answer,
-                created_at="2026-10-31T00:00:01Z",
-            ),
-        ]
-
-        follow_up = await agent.respond(
-            history,
-            "What is their email address?",
-        )
-        print("\nFOLLOW-UP:\n", follow_up)
-
-        no_match = await agent.respond(
-            [],
-            "Are there any pet vaccination services?",
-        )
-        print("\nNO MATCH:\n", no_match)
-
-    asyncio.run(test_agent())
