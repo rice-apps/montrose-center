@@ -33,9 +33,9 @@ Tests under `apps/api/tests/` can use `python -m pip install -e '.[dev]'` from `
 
 ## Task 3 starter scaffold
 
-The search task has constructor wiring and method signatures ready to fill in:
+The search task has constructor wiring and method signatures ready to fill in. For Task 3, the actual program fields supplied on November 14 supersede the earlier proposed service schema above: Program Name, Active, How to Refer, Population Served, Eligibility Criteria, Program Contacts, Program Definition, and Keyword1 through Keyword10. An ID and internal/external type were not supplied and are not assumed.
 
-- `app/schemas/resource_search.py`: `ResourceSearchResult` proposes a shared return shape for the repository, service, and agent tool, derived from this document's catalog contract rather than a live Supabase schema. It includes service facts and nullable descriptive fields; contacts are loaded separately. Keywords and the active flag are used for searching/filtering and are omitted from results. Confirm the shape with the catalog and agent-tool owners.
+- `app/schemas/resource_search.py`: `ResourceSearchResult` uses Python names for the supplied program fields and preserves the ten keyword slots individually. `program_contacts` is a nullable text field containing names/contact details, not a separate relation. Program name and active status are required; missing descriptive fields remain null. Column mapping and other source storage types must be confirmed when implementing the repository.
 - `app/interfaces.py`: `ResourceSearchRepositoryProtocol` and `ResourceSearchServiceProtocol` define the search contracts. The service constructor and dependency annotations use these protocols; only providers choose concrete implementations.
 - `app/repositories/resource_search.py`: implement `_to_search_result(row)` and `ResourceSearchRepository.search_services(query, limit=10)` using the injected Supabase client.
 - `app/services/resource_search.py`: implement `ResourceSearchService.search_services(query, limit=10)`, validating a nonblank query and an integer limit of 1–20 before calling the repository. Invalid values should raise `ValueError`; no matches should return `[]`.
@@ -43,7 +43,7 @@ The search task has constructor wiring and method signatures ready to fill in:
 
 Search and row-mapping methods currently raise `NotImplementedError`. They use synchronous signatures to match the existing Supabase client. No agent tool or HTTP route calls them yet. This scaffold builds on the interface-based DI work.
 
-When implementing the task, handle exact-name priority, keyword/description matches, stable ties, inactive exclusion, null preservation, no matches, invalid queries/limits, and database failures. This scaffold adds no migration folder or test files.
+Search Program Name, Program Definition, and Keyword1 through Keyword10; filter to Active = true. When implementing the task, handle exact-name priority, keyword/definition matches, stable ties, inactive exclusion, null preservation, no matches, invalid queries/limits, and database failures. Confirm a stable database row key for tie-breaking rather than assuming a `service_id`. This scaffold adds no migration folder or test files.
 
 ## Integration order and sprint demo
 
