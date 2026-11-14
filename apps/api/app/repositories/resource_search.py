@@ -8,9 +8,10 @@ from app.schemas.resource_search import ResourceSearchResult
 
 
 def _to_search_result(row: dict[str, Any]) -> ResourceSearchResult:
-    """Map one returned program row, preserving unknown fields as None."""
+    """Map one returned program row to the required search-result fields."""
     # TODO: map the source column names to ResourceSearchResult's Python fields.
-    # Preserve Keyword1 through Keyword10 separately; do not invent missing values.
+    # Combine source keyword columns into keywords: list[str].
+    # All result fields are required and non-null; do not invent missing values.
     raise NotImplementedError("Search result mapping is not implemented")
 
 
