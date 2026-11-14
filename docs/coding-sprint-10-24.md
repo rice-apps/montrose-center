@@ -62,8 +62,6 @@ app.dependency_overrides[get_resource_agent] = lambda: fake_agent
 app.dependency_overrides.clear()
 ```
 
-Run the dependency wiring checks from `apps/api` with `python -m pytest` after installing `.[dev]`. They use test-only routes because the production chat routes are still scaffolds.
-
 ## Sprint completion target
 
 A developer should be able to start a chat, ask about the fictional resources, receive a reply based on that data, ask a follow-up, and reopen the conversation after a refresh. The demo should show when the fictional data does not contain an answer. 
