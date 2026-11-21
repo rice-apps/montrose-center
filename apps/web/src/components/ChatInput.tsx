@@ -22,11 +22,13 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
     e.preventDefault();
     if (!canSend) return;
 
+    const content = input;
+    setInput("");
     try {
-      await onSend(input.trim());
-      setInput("");
+      await onSend(content.trim());
     } catch {
-      // The parent displays the error. Keep the draft if sending fails.
+      // The parent displays the error. Restore the draft if sending fails.
+      setInput(content);
     }
   };
 

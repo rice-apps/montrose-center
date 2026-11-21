@@ -40,6 +40,14 @@ export default function ChatPage(): ReactElement {
     if (!content.trim() || loading || sending) return;
     setSending(true);
     setError(null);
+    const pendingMessage: Message = {
+      id: crypto.randomUUID(),
+      chat_id: chatId ?? "",
+      role: "user",
+      content: content.trim(),
+      created_at: new Date().toISOString(),
+    };
+    setMessages((previous) => [...previous, pendingMessage]);
     try {
       let currentId = chatId;
       if (!currentId) {
@@ -49,11 +57,13 @@ export default function ChatPage(): ReactElement {
       }
       const response = await sendMessage(currentId, content.trim());
       setMessages((previous) => [
-        ...previous,
-        response.user_message,
+        ...previous.map((message) =>
+          message.id === pendingMessage.id ? response.user_message : message,
+        ),
         response.assistant_message,
       ]);
     } catch (error) {
+      setMessages((previous) => previous.filter((message) => message.id !== pendingMessage.id));
       const detail = error instanceof Error ? error.message : "Unable to send the message.";
       setError(`${detail} Your message may already be saved. Refresh the page before sending again.`);
       throw error; // Keep the composer's draft when the request fails.
