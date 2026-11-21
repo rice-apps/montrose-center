@@ -3,7 +3,6 @@
 from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from app.repositories.fictional_resources import FictionalResourceRepository
 from app.schemas.chats import Message
 from app.schemas.resource_search import ResourceSearchResult
 from app.services.agent import (
@@ -74,11 +73,11 @@ def test_program_block_lists_every_field_in_order():
     ]
 
 
-def test_blank_fields_are_labeled_unknown_not_dropped():
+def test_absent_eligibility_and_contacts_do_not_override_other_program_details():
     text = format_program(program("Housing", eligibility_criteria="  ", program_contacts="", keywords=[" ", ""]))
 
-    assert f"Eligibility criteria: {UNKNOWN}" in text
-    assert f"Program contacts: {UNKNOWN}" in text
+    assert "Eligibility criteria:" not in text
+    assert "Program contacts:" not in text
     assert f"Keywords: {UNKNOWN}" in text
 
 
@@ -100,11 +99,10 @@ def test_long_fields_are_cut_off():
 
 
 # - The whole prompt -
-# Remove the fictional-data check here when the agent.py rule is removed for real data.
-def test_prompt_states_fictional_data_and_unknown_rules():
+def test_prompt_states_unknown_rules_without_labeling_catalog_fictional():
     prompt = render_system_prompt([program("Housing")], has_more=False)
 
-    assert "fictional demo data" in prompt
+    assert "fictional demo data" not in prompt
     assert f'"{UNKNOWN}" is missing: say it is unknown and never guess it' in prompt
     assert "Never invent programs, eligibility rules, names, emails, or phone numbers." in prompt
 
@@ -214,14 +212,3 @@ def test_chat_history_stays_out_of_the_system_prompt():
     assert isinstance(earlier_answer, ModelResponse)
     assert earlier_answer.parts[0].content == "Earlier answer"
     assert follow_up.parts[-1].content == "Follow-up question"
-
-
-# - The temporary fictional repository -
-def test_fictional_repository_returns_active_programs_in_name_order():
-    programs = FictionalResourceRepository().list_active(limit=10)
-    names = [p.program_name for p in programs]
-
-    assert names == sorted(names)
-    assert all(p.active for p in programs)
-    assert "Example Retired Support Group" not in names
-    assert FictionalResourceRepository().list_active(limit=1, offset=1)[0].program_name == names[1]

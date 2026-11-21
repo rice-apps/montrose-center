@@ -20,7 +20,7 @@ from app.interfaces import (
     ResourceSearchServiceProtocol,
 )
 from app.repositories.chats import ChatRepository
-from app.repositories.fictional_resources import FictionalResourceRepository
+from app.repositories.resources import ResourceRepository
 from app.repositories.resource_search import ResourceSearchRepository
 from app.services.agent import ResourceAgent
 from app.services.chats import ChatService
@@ -50,10 +50,11 @@ def get_model() -> Model:
     return infer_model(model_name)
 
 
-def get_resource_repository() -> ResourceRepositoryProtocol:
+def get_resource_repository(
+    client: Annotated[Client, Depends(get_supabase_client)],
+) -> ResourceRepositoryProtocol:
     """Catalog reads for the agent prompt."""
-    # TODO(Task 5): return ResourceRepository(client) using get_supabase_client.
-    return FictionalResourceRepository()
+    return ResourceRepository(client)
 
 
 def get_resource_agent(
