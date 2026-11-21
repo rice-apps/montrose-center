@@ -59,22 +59,23 @@ export function ChatSidebar(props: ChatSidebarProps): ReactElement{
  return (
   <aside className={styles.sidebar}>
     <div className={styles.agentName}>
-      Bot
+      Rosy
     </div>
     <button className ={styles.newChat} onClick={props.onNewChat}>
         <Plus/><p className={styles.label}>New chat</p>
     </button>
+    <div className={styles.heading}>
+      <p className={styles.label}>Recent chats</p><Search/>
+    </div>
     <div className={styles.recentChats}>
-      <div className={styles.heading}>
-        <p className={styles.label}>Recent chats</p><Search/>
-      </div>
       {groupChats(sortChats(props.chats)).map(group => (
         <div key={group.label} className={styles.group}>
           <p className={styles.groupLabel}>{group.label}</p>
           <ul className={styles.chatList}>
             {group.chats.map(chat => (
             <li key={chat.id}>
-              <button className={styles.listItems} onClick = {() => props.onSelectChat(chat.id)}>
+              <button className={`${styles.listItems} ${chat.id === props.activeChatId ? styles.selected : ""}`} 
+              onClick = {() => props.onSelectChat(chat.id)}>
                 <MessageCircle/>
                 {chat.title}
               </button>
