@@ -3,9 +3,7 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
-import { createChat, getChat, sendMessage, type Message } from "@/lib/api";
-
-const CHAT_STORAGE_KEY = "montrose-chat-id";
+import { createChat, getChat, listChats, sendMessage, type Message } from "@/lib/api";
 
 export default function ChatPage(): ReactElement {
   const [chatId, setChatId] = useState<string | null>(null);
@@ -21,11 +19,18 @@ export default function ChatPage(): ReactElement {
     setLoading(true);
     setError(null);
 
-    async function restoreChat() {
+    async function loadLatestChat() {
       try {
-        const savedId = localStorage.getItem(CHAT_STORAGE_KEY);
-        if (!savedId) return;
-        const chat = await getChat(savedId);
+        const chats = await listChats();
+        if (cancelled) return;
+        // The API orders conversations by last_updated, newest first.
+        const latestChat = chats[0];
+        if (!latestChat) {
+          setChatId(null);
+          setMessages([]);
+          return;
+        }
+        const chat = await getChat(latestChat.id);
         if (!cancelled) {
           setChatId(chat.id);
           setMessages(chat.messages);
@@ -39,12 +44,11 @@ export default function ChatPage(): ReactElement {
       }
     }
 
-    void restoreChat();
+    void loadLatestChat();
     return () => { cancelled = true; };
   }, [reload]);
 
   const newChat = () => {
-    localStorage.removeItem(CHAT_STORAGE_KEY);
     setChatId(null);
     setMessages([]);
     setError(null);
@@ -61,7 +65,6 @@ export default function ChatPage(): ReactElement {
         const chat = await createChat();
         currentId = chat.id;
         setChatId(currentId);
-        localStorage.setItem(CHAT_STORAGE_KEY, currentId);
       }
       const response = await sendMessage(currentId, content.trim());
       setMessages((previous) => [
