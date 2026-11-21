@@ -1,7 +1,5 @@
 """Tests: catalog programs in the agent's system prompt"""
 
-import asyncio
-
 from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
@@ -155,7 +153,7 @@ def test_agent_shows_at_most_the_limit_and_flags_the_rest():
     resources = FakeResources([program(f"Program {i:02}") for i in range(30)])
     agent = ResourceAgent(model=recording_model()[0], resources=resources, program_limit=25)
 
-    prompt = asyncio.run(agent.build_system_prompt())
+    prompt = agent.build_system_prompt()
 
     assert resources.calls == [(26, 0)]  # one extra, to detect a cut-off catalog
     assert prompt.count("Program name: ") == 25
@@ -168,7 +166,7 @@ def test_agent_with_search_tool_points_to_it():
     resources = FakeResources([program(f"Program {i:02}") for i in range(30)])
     agent = ResourceAgent(model=recording_model()[0], resources=resources, search_tool_available=True)
 
-    prompt = asyncio.run(agent.build_system_prompt())
+    prompt = agent.build_system_prompt()
 
     assert "search_services" in prompt
 
@@ -177,7 +175,7 @@ def test_agent_with_exactly_the_limit_is_complete():
     resources = FakeResources([program(f"Program {i:02}") for i in range(25)])
     agent = ResourceAgent(model=recording_model()[0], resources=resources, program_limit=25)
 
-    prompt = asyncio.run(agent.build_system_prompt())
+    prompt = agent.build_system_prompt()
 
     assert prompt.count("Program name: ") == 25
     assert "All 25 active programs are listed below." in prompt
@@ -190,9 +188,9 @@ def test_agent_reads_the_catalog_for_each_reply_not_at_creation():
 
     assert resources.calls == []  # creating the agent reads nothing
 
-    asyncio.run(agent.respond([], "Is there housing help?"))
+    agent.respond([], "Is there housing help?")
     resources.programs = [program("Legal")]  # the catalog changes between replies
-    asyncio.run(agent.respond([], "Is there legal help?"))
+    agent.respond([], "Is there legal help?")
 
     assert len(resources.calls) == 2
     assert "Program name: Legal" in seen["instructions"]
@@ -204,7 +202,7 @@ def test_chat_history_stays_out_of_the_system_prompt():
     agent = ResourceAgent(model=model, resources=FakeResources([program("Housing")]))
     history = [message("user", "Earlier question"), message("assistant", "Earlier answer")]
 
-    reply = asyncio.run(agent.respond(history, "Follow-up question"))
+    reply = agent.respond(history, "Follow-up question")
 
     assert reply == "ok"
     assert "Earlier question" not in seen["instructions"]

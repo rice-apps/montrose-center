@@ -1,7 +1,5 @@
 """Load active catalog programs into the system prompt and call the model."""
 
-import asyncio
-
 from pydantic_ai import Agent
 from pydantic_ai.messages import (
     ModelMessage,
@@ -142,20 +140,17 @@ class ResourceAgent:
         self.program_limit = program_limit
         self.search_tool_available = search_tool_available
 
-    async def build_system_prompt(self) -> str:
+    def build_system_prompt(self) -> str:
         """Read current programs and build the prompt for one reply."""
         # Ask for one extra program to learn whether the catalog goes past the limit
-        # The repository is synchronous, so run it in a thread to keep other requests moving
-        programs = await asyncio.to_thread(
-            self.resources.list_active, self.program_limit + 1, 0
-        )
+        programs = self.resources.list_active(self.program_limit + 1, 0)
         return render_system_prompt(
             programs[: self.program_limit],
             has_more=len(programs) > self.program_limit,
             search_tool_available=self.search_tool_available,
         )
 
-    async def respond(
+    def respond(
         self,
         history: list[Message],
         user_text: str,
@@ -163,10 +158,10 @@ class ResourceAgent:
         """Answer using fresh catalog data, the supplied model, and earlier messages."""
         agent = Agent(
             self.model,
-            instructions=await self.build_system_prompt(),
+            instructions=self.build_system_prompt(),
         )
 
-        result = await agent.run(
+        result = agent.run_sync(
             user_text,
             message_history=to_model_messages(history),
         )
