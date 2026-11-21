@@ -45,6 +45,14 @@ class ChatServiceProtocol(Protocol):
     def send_message(self, chat_id: str, content: str) -> SendMessageResponse: ...
 
 
+class ResourceRepositoryProtocol(Protocol):
+    """Catalog reads needed by the agent prompt"""
+
+    def list_active(self) -> list[ResourceSearchResult]:
+        """Return all active programs in a stable order."""
+        ...
+
+
 class ResourceSearchRepositoryProtocol(Protocol):
     """Ranked catalog reads needed by the search service."""
 
