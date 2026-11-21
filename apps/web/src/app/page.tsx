@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
 import { createChat, getChat, listChats, sendMessage, type Message } from "@/lib/api";
@@ -11,6 +11,12 @@ export default function ChatPage(): ReactElement {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const chatWindow = chatWindowRef.current;
+    if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+  }, [messages, sending]);
 
   useEffect(() => {
     async function loadLatestChat() {
@@ -74,7 +80,7 @@ export default function ChatPage(): ReactElement {
 
   return (
     <main className="flex h-dvh flex-col bg-[#F3F3F3]">
-      <div className="chat-scroll flex-1 overflow-y-auto">
+      <div ref={chatWindowRef} className="chat-scroll flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-5xl px-6 pb-10 pt-10">
           <h1 className="mb-10 px-2 text-2xl font-semibold text-[#202020]">Chat</h1>
 
