@@ -17,13 +17,14 @@ import { toAttachment, type Attachment } from "@/lib/attachments";
 
 export type ChatInputProps = {
   disabled?: boolean;
+  allowAttachments?: boolean;
   onSend: (content: string, attachments: Attachment[]) => void | Promise<void>;
 };
 
 const MAX_ATTACHMENTS = 10;
 
 // Task 3: get the message and call onSend when submitted.
-export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
+export function ChatInput({ disabled, allowAttachments = true, onSend }: ChatInputProps): ReactElement {
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,6 +35,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
   const formRef = useRef<HTMLFormElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sendingRef = useRef(false);
 
   // Refocus once the assistant has finished replying.
   useEffect(() => {
@@ -58,6 +60,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
   }, [menuOpen]);
 
   const addFiles = (files: FileList | File[] | null) => {
+    if (!allowAttachments || disabled) return;
     if (!files || files.length === 0) return;
     // Copy the files out *now*: a FileList is live and gets emptied when the
     // picker is reset (e.target.value = ""), which can happen before React
@@ -85,7 +88,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
 
   const onPaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const files = Array.from(e.clipboardData.files);
-    if (files.length) {
+    if (allowAttachments && files.length) {
       e.preventDefault();
       addFiles(files);
     }
@@ -99,14 +102,21 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
 
   const canSend = !disabled && (input.trim().length > 0 || attachments.length > 0);
 
-  const sendMessage = (e: SyntheticEvent) => {
+  const sendMessage = async (e: SyntheticEvent) => {
     e.preventDefault();
-    if (!canSend) return;
+    if (!canSend || sendingRef.current) return;
 
-    // Object URLs stay alive: the sent message keeps showing the previews.
-    onSend(input.trim(), attachments);
-    setInput("");
-    setAttachments([]);
+    sendingRef.current = true;
+    try {
+      // Object URLs stay alive: the sent message keeps showing the previews.
+      await onSend(input.trim(), attachments);
+      setInput("");
+      setAttachments([]);
+    } catch {
+      // The parent displays the error. Keep the draft available for recovery.
+    } finally {
+      sendingRef.current = false;
+    }
   };
 
   const menuItem =
@@ -119,7 +129,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
       onSubmit={sendMessage}
       onDragOver={(e) => {
         e.preventDefault();
-        setDragging(true);
+        if (allowAttachments && !disabled) setDragging(true);
       }}
       onDragLeave={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false);
@@ -164,7 +174,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
         )}
 
         <div className="flex items-center gap-1">
-          <button
+          {allowAttachments && <button
             type="button"
             aria-label="Add attachments"
             aria-expanded={menuOpen}
@@ -174,7 +184,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
             onClick={() => setMenuOpen((o) => !o)}
           >
             <Plus className="size-5 text-[#202020]" />
-          </button>
+          </button>}
           <input
             ref={inputRef}
             type="text"
