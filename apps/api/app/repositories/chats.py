@@ -3,7 +3,6 @@ from uuid import uuid4
 
 from supabase import Client, PostgrestAPIError
 
-from app.errors import ChatNotFound
 from app.schemas.chats import Chat, ChatSummary, Message
 
 # Postgres error code for a foreign key violation.
@@ -75,7 +74,9 @@ class ChatRepository:
             .data
         )
         if not rows:
-            raise ChatNotFound(f"Chat {chat_id} not found")
+            # Placeholder for now if chat is not found 
+            print(f"Chat {chat_id} not found")
+            raise LookupError(f"Chat {chat_id} not found")
 
         row = rows[0]
         return Chat(
@@ -111,7 +112,7 @@ class ChatRepository:
             )
         except PostgrestAPIError as error:
             if error.code == FOREIGN_KEY_VIOLATION:  # no chat has this chat_id
-                raise ChatNotFound(f"Chat {chat_id} not found") from error
+                raise LookupError(f"Chat {chat_id} not found") from error
             raise
 
         # Sending a message moves the chat to the top of the sidebar.
