@@ -93,7 +93,7 @@ class ResourceAgent:
 
         return f"{rules}\n\nResource list:\n\n{resource_text}"
 
-    async def respond(
+    def respond(
         self,
         history: list[Message],
         user_text: str,
@@ -104,7 +104,7 @@ class ResourceAgent:
             instructions=self.system_prompt,
         )
 
-        result = await agent.run(
+        result = agent.run_sync(
             user_text,
             message_history=to_model_messages(history),
         )

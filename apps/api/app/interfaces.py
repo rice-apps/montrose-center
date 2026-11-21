@@ -28,7 +28,7 @@ class ChatRepositoryProtocol(Protocol):
 class ResourceAgentProtocol(Protocol):
     """Reply generation needed by the chat service."""
 
-    async def respond(self, history: list[Message], user_text: str) -> str: ...
+    def respond(self, history: list[Message], user_text: str) -> str: ...
 
 
 class ChatServiceProtocol(Protocol):
@@ -42,7 +42,7 @@ class ChatServiceProtocol(Protocol):
 
     def update_chat_title(self, chat_id: str, title: str) -> Chat: ...
 
-    async def send_message(self, chat_id: str, content: str) -> SendMessageResponse: ...
+    def send_message(self, chat_id: str, content: str) -> SendMessageResponse: ...
 
 
 class ResourceSearchRepositoryProtocol(Protocol):

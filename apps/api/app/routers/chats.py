@@ -50,7 +50,7 @@ def update_chat(chat_id: str, payload: ChatUpdate, service: ChatServiceDep) -> C
     return chat
 
 @router.patch("/messages", response_model=SendMessageResponse)
-async def send_message(
+def send_message(
     chat_id: str, payload: MessageCreate, service: ChatServiceDep
 ) -> SendMessageResponse:
     """ 
@@ -58,6 +58,6 @@ async def send_message(
     Sends a PATCH request to the backend
     Raises a 404 error if the chat of the specified ID does not exist
     """
-    message = await service.send_message(chat_id, payload.content)
+    message = service.send_message(chat_id, payload.content)
     if message is None: raise HTTPException(status_code=404, detail="Chat does not exist")
     return message
