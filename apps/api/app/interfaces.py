@@ -45,6 +45,14 @@ class ChatServiceProtocol(Protocol):
     async def send_message(self, chat_id: str, content: str) -> SendMessageResponse: ...
 
 
+class ResourceRepositoryProtocol(Protocol):
+    """Catalog reads needed by the agent prompt"""
+
+    def list_active(self, limit: int, offset: int = 0) -> list[ResourceSearchResult]:
+        """Return up to `limit` active programs starting at `offset`, in a stable order."""
+        ...
+
+
 class ResourceSearchRepositoryProtocol(Protocol):
     """Ranked catalog reads needed by the search service."""
 
