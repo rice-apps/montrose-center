@@ -6,7 +6,6 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from app.schemas.chats import Message
 from app.schemas.resource_search import ResourceSearchResult
 from app.services.agent import (
-    FIELD_CHAR_LIMIT,
     UNKNOWN,
     ResourceAgent,
     format_program,
@@ -33,11 +32,11 @@ class FakeResources:
 
     def __init__(self, programs: list[ResourceSearchResult]) -> None:
         self.programs = programs
-        self.calls: list[tuple[int, int]] = []
+        self.calls: list[None] = []
 
-    def list_active(self, limit: int, offset: int = 0) -> list[ResourceSearchResult]:
-        self.calls.append((limit, offset))
-        return self.programs[offset : offset + limit]
+    def list_active(self) -> list[ResourceSearchResult]:
+        self.calls.append(None)
+        return self.programs
 
 
 def recording_model() -> tuple[FunctionModel, dict]:
@@ -91,16 +90,15 @@ def test_multiline_fields_stay_on_one_labeled_line():
     assert not any(line.startswith("Program name: Fake") for line in text.splitlines())
 
 
-def test_long_fields_are_cut_off():
-    text = format_program(program("Housing", program_definition="x" * (FIELD_CHAR_LIMIT + 100)))
-
-    definition = next(line for line in text.splitlines() if line.startswith("Program definition: "))
-    assert definition == "Program definition: " + "x" * FIELD_CHAR_LIMIT + "…"
+def test_long_fields_are_preserved():
+    description = "x" * 3000
+    text = format_program(program("Housing", program_definition=description))
+    assert f"Program definition: {description}" in text
 
 
 # - The whole prompt -
 def test_prompt_states_unknown_rules_without_labeling_catalog_fictional():
-    prompt = render_system_prompt([program("Housing")], has_more=False)
+    prompt = render_system_prompt([program("Housing")])
 
     assert "fictional demo data" not in prompt
     assert f'"{UNKNOWN}" is missing: say it is unknown and never guess it' in prompt
@@ -108,75 +106,30 @@ def test_prompt_states_unknown_rules_without_labeling_catalog_fictional():
 
 
 def test_inactive_programs_never_reach_the_prompt():
-    prompt = render_system_prompt([program("Housing"), program("Closed", active=False)], has_more=False)
+    prompt = render_system_prompt([program("Housing"), program("Closed", active=False)])
 
     assert "Program name: Housing" in prompt
     assert "Closed" not in prompt
 
 
-def test_complete_catalog_says_all_programs_are_listed():
-    prompt = render_system_prompt([program("A"), program("B")], has_more=False)
-
-    assert "All 2 active programs are listed below." in prompt
-    assert "partial catalog" not in prompt
-    assert "search_services" not in prompt
-
-
-def test_partial_catalog_points_to_search_tool_when_available():
-    prompt = render_system_prompt([program("A"), program("B")], has_more=True, search_tool_available=True)
-
-    assert "Only the first 2 active programs are listed below." in prompt
-    assert "partial catalog" in prompt
-    assert "search_services" in prompt
-
-
-def test_partial_catalog_without_search_tool_never_mentions_it():
-    prompt = render_system_prompt([program("A"), program("B")], has_more=True)
-
-    assert "Only the first 2 active programs are listed below." in prompt
-    assert "partial catalog" in prompt
-    assert "search_services" not in prompt
-    assert "full catalog may include others" in prompt
-
-
 def test_empty_catalog_says_no_match():
-    prompt = render_system_prompt([], has_more=False)
+    prompt = render_system_prompt([])
 
     assert "no active programs" in prompt
     assert "BEGIN CATALOG" not in prompt
 
 
 # - The agent reading the repository -
-def test_agent_shows_at_most_the_limit_and_flags_the_rest():
+def test_agent_includes_every_program():
     resources = FakeResources([program(f"Program {i:02}") for i in range(30)])
-    agent = ResourceAgent(model=recording_model()[0], resources=resources, program_limit=25)
-
+    agent = ResourceAgent(model=recording_model()[0], resources=resources)
     prompt = agent.build_system_prompt()
 
-    assert resources.calls == [(26, 0)]  # one extra, to detect a cut-off catalog
-    assert prompt.count("Program name: ") == 25
-    assert "Program 24" in prompt and "Program 25" not in prompt
-    assert "partial catalog" in prompt
-    assert "search_services" not in prompt  # the tool is off by default
-
-
-def test_agent_with_search_tool_points_to_it():
-    resources = FakeResources([program(f"Program {i:02}") for i in range(30)])
-    agent = ResourceAgent(model=recording_model()[0], resources=resources, search_tool_available=True)
-
-    prompt = agent.build_system_prompt()
-
-    assert "search_services" in prompt
-
-
-def test_agent_with_exactly_the_limit_is_complete():
-    resources = FakeResources([program(f"Program {i:02}") for i in range(25)])
-    agent = ResourceAgent(model=recording_model()[0], resources=resources, program_limit=25)
-
-    prompt = agent.build_system_prompt()
-
-    assert prompt.count("Program name: ") == 25
-    assert "All 25 active programs are listed below." in prompt
+    assert len(resources.calls) == 1
+    assert prompt.count("Program name: ") == 30
+    assert "Program 29" in prompt
+    assert "partial catalog" not in prompt
+    assert "search_services" not in prompt
 
 
 def test_agent_reads_the_catalog_for_each_reply_not_at_creation():

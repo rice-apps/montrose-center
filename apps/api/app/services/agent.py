@@ -14,10 +14,6 @@ from app.interfaces import ResourceRepositoryProtocol
 from app.schemas.chats import Message
 from app.schemas.resource_search import ResourceSearchResult
 
-# Maximum programs placed in one prompt.
-PROGRAM_LIMIT = 25
-# Longest text kept from one field, so a single long entry cannot blow up the prompt
-FIELD_CHAR_LIMIT = 2000
 UNKNOWN = "Unknown (not recorded)"
 
 RULES = (
@@ -39,12 +35,8 @@ RULES = (
 
 
 def _clean(value: str) -> str:
-    """Put a field on one line and cap its length."""
-    # Line breaks inside a field would create unlabeled lines that look like new fields.
-    text = " ".join(value.split())
-    if len(text) > FIELD_CHAR_LIMIT:
-        text = text[:FIELD_CHAR_LIMIT].rstrip() + "…"
-    return text
+    """Put a field on one line."""
+    return " ".join(value.split())
 
 
 def _field(value: str) -> str:
@@ -69,37 +61,14 @@ def format_program(program: ResourceSearchResult) -> str:
     return "\n".join(lines)
 
 
-def render_system_prompt(
-    programs: list[ResourceSearchResult],
-    has_more: bool,
-    search_tool_available: bool = False,
-) -> str:
-    """Combine the rules with the programs; `has_more` means the catalog was cut off."""
+def render_system_prompt(programs: list[ResourceSearchResult]) -> str:
+    """Combine the rules with all active programs."""
     active = [program for program in programs if program.active]
-
     if not active:
         return f"{RULES}\n\nThe catalog lists no active programs. Say that no matching program was found."
 
-    if has_more and search_tool_available:
-        note = (
-            f"Only the first {len(active)} active programs are listed below. "
-            "This is a partial catalog: other programs may exist. "
-            "Use the search_services tool to search the full catalog "
-            "before saying that no program matches."
-        )
-    elif has_more:
-        # Never mention a tool the agent cannot call, or it may claim to have searched.
-        note = (
-            f"Only the first {len(active)} active programs are listed below. "
-            "This is a partial catalog: other programs may exist. "
-            "If no listed program matches, say that none of the listed programs match "
-            "and that the full catalog may include others."
-        )
-    else:
-        note = f"All {len(active)} active programs are listed below."
-
     catalog = "\n\n".join(format_program(program) for program in active)
-    return f"{RULES}\n\n{note}\n\n--- BEGIN CATALOG ---\n{catalog}\n--- END CATALOG ---"
+    return f"{RULES}\n\n--- BEGIN CATALOG ---\n{catalog}\n--- END CATALOG ---"
 
 
 def to_model_messages(history: list[Message]) -> list[ModelMessage]:
@@ -124,30 +93,13 @@ def to_model_messages(history: list[Message]) -> list[ModelMessage]:
 
 
 class ResourceAgent:
-    # search_tool_available: set this to True only where the search_services tool is
-    # registered with the agent. While it is False, a cut-off catalog tells the
-    # model that other programs may exist without pointing it to a tool it cannot call.
-    def __init__(
-        self,
-        model: Model,
-        resources: ResourceRepositoryProtocol,
-        program_limit: int = PROGRAM_LIMIT,
-        search_tool_available: bool = False,
-    ) -> None:
+    def __init__(self, model: Model, resources: ResourceRepositoryProtocol) -> None:
         self.model = model
         self.resources = resources
-        self.program_limit = program_limit
-        self.search_tool_available = search_tool_available
 
     def build_system_prompt(self) -> str:
         """Read current programs and build the prompt for one reply."""
-        # Ask for one extra program to learn whether the catalog goes past the limit
-        programs = self.resources.list_active(self.program_limit + 1, 0)
-        return render_system_prompt(
-            programs[: self.program_limit],
-            has_more=len(programs) > self.program_limit,
-            search_tool_available=self.search_tool_available,
-        )
+        return render_system_prompt(self.resources.list_active())
 
     def respond(
         self,

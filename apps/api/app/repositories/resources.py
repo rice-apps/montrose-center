@@ -9,17 +9,23 @@ class ResourceRepository:
     def __init__(self, client: Client) -> None:
         self.client = client
 
-    def list_active(self, limit: int, offset: int = 0) -> list[ResourceSearchResult]:
-        rows = (
-            self.client.table("services")
-            .select("service_name, description, referral_instruction, target_population, keywords, is_active")
-            .eq("is_active", True)
-            .order("service_name")
-            .order("service_id")
-            .range(offset, offset + limit - 1)
-            .execute()
-            .data
-        )
+    def list_active(self) -> list[ResourceSearchResult]:
+        rows = []
+        # Page through Supabase's response cap without limiting the catalog.
+        while True:
+            page = (
+                self.client.table("services")
+                .select("service_name, description, referral_instruction, target_population, keywords, is_active")
+                .eq("is_active", True)
+                .order("service_name")
+                .order("service_id")
+                .range(len(rows), len(rows) + 999)
+                .execute()
+                .data
+            )
+            if not page:
+                break
+            rows.extend(page)
         return [
             ResourceSearchResult(
                 program_name=row["service_name"],

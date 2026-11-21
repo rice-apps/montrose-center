@@ -48,8 +48,8 @@ class ChatServiceProtocol(Protocol):
 class ResourceRepositoryProtocol(Protocol):
     """Catalog reads needed by the agent prompt"""
 
-    def list_active(self, limit: int, offset: int = 0) -> list[ResourceSearchResult]:
-        """Return up to `limit` active programs starting at `offset`, in a stable order."""
+    def list_active(self) -> list[ResourceSearchResult]:
+        """Return all active programs in a stable order."""
         ...
 
 
