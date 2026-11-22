@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { LandingPage } from "@/components/landing-page";
 import { ConversationPage } from "@/components/conversation-page";
@@ -9,6 +9,7 @@ import { createChat, getChat, listChats, sendMessage, type ChatSummary, type Mes
 export default function ChatPage(): ReactElement {
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [loadingChat, setLoadingChat] = useState(false);
+  const chatLoadId = useRef(0);
   const [sidebarError, setSidebarError] = useState<string | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,22 +31,27 @@ export default function ChatPage(): ReactElement {
   }, []);
 
   const selectChat = async (id: string) => {
-    if (sending || loadingChat) return;
+    if (sending) return;
+    const loadId = ++chatLoadId.current;
     setLoadingChat(true);
     setError(null);
     try {
       const chat = await getChat(id);
+      if (loadId !== chatLoadId.current) return;
       setChatId(chat.id);
       setMessages(chat.messages);
     } catch (error) {
+      if (loadId !== chatLoadId.current) return;
       setError(error instanceof Error ? error.message : "Unable to load the chat.");
     } finally {
-      setLoadingChat(false);
+      if (loadId === chatLoadId.current) setLoadingChat(false);
     }
   };
 
   const newChat = () => {
-    if (sending || loadingChat) return;
+    if (sending) return;
+    chatLoadId.current += 1;
+    setLoadingChat(false);
     setChatId(null);
     setMessages([]);
     setError(null);
@@ -101,7 +107,7 @@ export default function ChatPage(): ReactElement {
         activeChatId={chatId}
         onSelectChat={selectChat}
         onNewChat={newChat}
-        disabled={sending || loadingChat}
+        disabled={sending}
         error={sidebarError}
       />
       <div className="min-w-0 flex-1 overflow-y-auto">
