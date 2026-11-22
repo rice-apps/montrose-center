@@ -42,7 +42,7 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
 
   return (
     <form className="relative order-2" onSubmit={sendMessage}>
-      <div className="flex w-full items-end gap-1 rounded-[28px] border border-[#E5E5E5] bg-white p-2 text-slate-800 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
+      <div className="flex w-full items-end gap-1 rounded-[28px] border border-[#E5E5E5] bg-white p-2 pl-4 text-slate-800 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
         <textarea
           ref={inputRef}
           rows={1}
