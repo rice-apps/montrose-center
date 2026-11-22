@@ -1,0 +1,33 @@
+.page {
+  min-height: 100vh;
+  padding: 16px;
+  background: #f4f4f4;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 692px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.action {
+  padding: 11px 16px;
+  background: #f4f4f4;
+  border: 1px solid #dcdcdc;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 16px;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: #ebebeb;
+}
