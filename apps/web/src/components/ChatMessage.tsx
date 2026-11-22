@@ -55,7 +55,6 @@ export function ChatMessage({
               isUser ? "bg-[#EBEBEB] text-[#202020]" : "text-slate-800"
             }`}
           >
-            {isUser || <h2 className="text-sm text-[#202020] font-medium">Rosie</h2>}
             {isUser ? (
               <p className="text-[#666666] text-sm mt-1 leading-relaxed whitespace-pre-wrap">
                 {message.content}
