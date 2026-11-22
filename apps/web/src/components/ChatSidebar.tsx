@@ -1,3 +1,5 @@
+"use client";
+
 import styles from './ChatSidebar.module.css';
 import { Plus, Search, UserRound, ChevronRight, MessageCircle } from 'lucide-react';
 import type { ReactElement } from "react";
@@ -8,6 +10,8 @@ export type ChatSidebarProps = {
   activeChatId: string | null;
   onSelectChat: (chatId: string) => void;
   onNewChat: () => void;
+  disabled?: boolean;
+  error?: string | null;
 };
 
 type ChatGroup = { label: string; chats: ChatSummary[] };
@@ -27,14 +31,14 @@ function getGroupLabel(updated_at: string): string{
   const yesterday = today.getTime() - DAY;
   const sevenDays = today.getTime() - (DAY * 7)
   const thirtyDays = today.getTime() - (DAY * 30)
-  
+
   const date = new Date(updated_at);
   const chatTime = date.getTime();
-    
+
   if (chatTime >= today.getTime()) return "Today";
   else if (chatTime >= yesterday) return "Yesterday";
-  else if (chatTime >= sevenDays) return "Previous 7 days"; 
-  else if (chatTime >= thirtyDays) return "Previous 30 days"; 
+  else if (chatTime >= sevenDays) return "Previous 7 days";
+  else if (chatTime >= thirtyDays) return "Previous 30 days";
   else return date.toLocaleString("en-US", {month: "long", year: "numeric"})
 }
 
@@ -57,16 +61,17 @@ function groupChats(chats: ChatSummary[]):ChatGroup[] {
 // Task 2: list chats and let the user select or create one.
 export function ChatSidebar(props: ChatSidebarProps): ReactElement{
  return (
-  <aside className={styles.sidebar}>
+  <aside className={styles.sidebar} aria-label="Chat history">
     <div className={styles.agentName}>
-      Rosy
+      Rosie
     </div>
-    <button className ={styles.newChat} onClick={props.onNewChat}>
+    <button type="button" className={styles.newChat} onClick={props.onNewChat} disabled={props.disabled}>
         <Plus/><p className={styles.label}>New chat</p>
     </button>
     <div className={styles.heading}>
       <p className={styles.label}>Recent chats</p><Search/>
     </div>
+    {props.error && <p role="alert" className={styles.error}>{props.error}</p>}
     <div className={styles.recentChats}>
       {groupChats(sortChats(props.chats)).map(group => (
         <div key={group.label} className={styles.group}>
@@ -74,10 +79,10 @@ export function ChatSidebar(props: ChatSidebarProps): ReactElement{
           <ul className={styles.chatList}>
             {group.chats.map(chat => (
             <li key={chat.id}>
-              <button className={`${styles.listItems} ${chat.id === props.activeChatId ? styles.selected : ""}`} 
+              <button type="button" disabled={props.disabled} aria-current={chat.id === props.activeChatId ? "true" : undefined} className={`${styles.listItems} ${chat.id === props.activeChatId ? styles.selected : ""}`}
               onClick = {() => props.onSelectChat(chat.id)}>
                 <MessageCircle/>
-                {chat.title}
+                <span className={styles.chatTitle}>{chat.title || "New chat"}</span>
               </button>
             </li>
             ))}
