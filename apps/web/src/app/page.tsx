@@ -105,17 +105,14 @@ export default function ChatPage(): ReactElement {
         error={sidebarError}
       />
       <div className="min-w-0 flex-1 overflow-y-auto">
-        {loadingChat ? (
-          <main className="h-dvh bg-[#F3F3F3] px-8 py-10">
-            <p role="status" className="text-sm text-[#666666]">Loading chat…</p>
-          </main>
-        ) : !error && messages.length === 0 ? (
-          <LandingPage key={chatId ?? "new"} onSend={send} disabled={sending} />
+        {!error && messages.length === 0 ? (
+          <LandingPage key={chatId ?? "new"} onSend={send} disabled={sending || loadingChat} />
         ) : (
           <ConversationPage
             key={chatId ?? "new"}
             messages={messages}
             sending={sending}
+            disabled={loadingChat}
             error={error}
             onSend={send}
           />
