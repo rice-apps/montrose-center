@@ -1,0 +1,24 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: #f2f2f2;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1a1a1a;
+}
+
+.heading {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.inputBox {
+  width: 728px;
+  max-width: 100%;
+}
