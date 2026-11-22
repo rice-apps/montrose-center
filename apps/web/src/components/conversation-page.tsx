@@ -8,6 +8,7 @@ import type { Message } from "@/lib/api";
 interface ConversationPageProps {
   messages: Message[];
   sending: boolean;
+  disabled?: boolean;
   error: string | null;
   onSend: (content: string) => void | Promise<void>;
 }
@@ -15,6 +16,7 @@ interface ConversationPageProps {
 export function ConversationPage({
   messages,
   sending,
+  disabled,
   error,
   onSend,
 }: ConversationPageProps): ReactElement {
@@ -42,7 +44,7 @@ export function ConversationPage({
         {error && (
           <p role="alert" className="mb-3 text-sm text-red-700">{error}</p>
         )}
-        <ChatInput onSend={onSend} disabled={sending || !!error} />
+        <ChatInput onSend={onSend} disabled={disabled || sending || !!error} />
       </div>
     </main>
   );

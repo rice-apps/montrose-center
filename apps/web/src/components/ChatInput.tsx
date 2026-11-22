@@ -42,13 +42,13 @@ export function ChatInput({ disabled, onSend }: ChatInputProps): ReactElement {
 
   return (
     <form className="relative order-2" onSubmit={sendMessage}>
-      <div className="flex w-full items-end gap-1 rounded-[28px] border border-[#E5E5E5] bg-white p-2 pl-4 text-slate-800 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
+      <div className="flex w-full items-end gap-1 rounded-[28px] border border-[#E5E5E5] bg-white p-2 pl-4 text-black shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
         <textarea
           ref={inputRef}
           rows={1}
           aria-label="Message"
-          className="mx-1 min-h-9 max-h-40 w-full resize-none overflow-y-auto border-none bg-transparent py-1.5 text-[15px] leading-6 text-slate-800 shadow-none outline-none placeholder:text-[#8a8a8a] placeholder:transition-opacity focus:placeholder:opacity-60"
-          placeholder="Ask anything..."
+          className="mx-1 min-h-9 max-h-40 w-full resize-none overflow-y-auto border-none bg-transparent py-1.5 text-[15px] leading-6 text-black shadow-none outline-none placeholder:text-[#8a8a8a] placeholder:transition-opacity focus:placeholder:opacity-60"
+          placeholder="Ask Rosie anything"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {

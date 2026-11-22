@@ -62,7 +62,7 @@ body {
 }
 
 .chat-markdown :is(h1, h2, h3, h4, h5, h6, strong) {
-  color: #202020;
+  color: #000000;
   font-weight: 600;
 }
 
