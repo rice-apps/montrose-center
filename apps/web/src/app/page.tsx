@@ -1,43 +1,18 @@
 "use client";
 
-import { useEffect, useState, type ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { LandingPage } from "@/components/landing-page";
 import { ConversationPage } from "@/components/conversation-page";
-import { createChat, getChat, listChats, sendMessage, type Message } from "@/lib/api";
+import { createChat, sendMessage, type Message } from "@/lib/api";
 
 export default function ChatPage(): ReactElement {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadLatestChat() {
-      try {
-        const chats = await listChats();
-        // The API orders conversations by last_updated, newest first.
-        const latestChat = chats[0];
-        if (!latestChat) {
-          setChatId(null);
-          setMessages([]);
-          return;
-        }
-        const chat = await getChat(latestChat.id);
-        setChatId(chat.id);
-        setMessages(chat.messages);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "Unable to load the chat.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadLatestChat();
-  }, []);
-
   const send = async (content: string) => {
-    if (!content.trim() || loading || sending) return;
+    if (!content.trim() || sending) return;
     setSending(true);
     setError(null);
     const pendingMessage: Message = {
@@ -65,20 +40,12 @@ export default function ChatPage(): ReactElement {
     } catch (error) {
       setMessages((previous) => previous.filter((message) => message.id !== pendingMessage.id));
       const detail = error instanceof Error ? error.message : "Unable to send the message.";
-      setError(`${detail} Your message may already be saved. Refresh the page before sending again.`);
+      setError(`${detail} Your message may already be saved. Refresh the page to start a new chat.`);
       throw error; // Keep the composer's draft when the request fails.
     } finally {
       setSending(false);
     }
   };
-
-  if (loading) {
-    return (
-      <main className="flex h-dvh flex-col bg-[#F3F3F3] px-8 py-10">
-        <p role="status" className="text-sm text-[#666666]">Loading chat…</p>
-      </main>
-    );
-  }
 
   if (!error && messages.length === 0) {
     return <LandingPage onSend={send} disabled={sending} />;
