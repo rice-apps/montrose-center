@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactElement } from "react";
-import { LandingPage } from "./landingpage/landingpage";
-import { ChatInput } from "@/components/ChatInput";
-import { ChatMessage } from "@/components/ChatMessage";
+import { useEffect, useState, type ReactElement } from "react";
+import { LandingPage } from "@/components/landing-page";
+import { ConversationPage } from "@/components/conversation-page";
 import { createChat, getChat, listChats, sendMessage, type Message } from "@/lib/api";
 
 export default function ChatPage(): ReactElement {
@@ -12,12 +11,6 @@ export default function ChatPage(): ReactElement {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const chatWindowRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const chatWindow = chatWindowRef.current;
-    if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
-  }, [messages, sending]);
 
   useEffect(() => {
     async function loadLatestChat() {
@@ -79,32 +72,24 @@ export default function ChatPage(): ReactElement {
     }
   };
 
-  if (!loading && !error && messages.length === 0) {
+  if (loading) {
+    return (
+      <main className="flex h-dvh flex-col bg-[#F3F3F3] px-8 py-10">
+        <p role="status" className="text-sm text-[#666666]">Loading chat…</p>
+      </main>
+    );
+  }
+
+  if (!error && messages.length === 0) {
     return <LandingPage onSend={send} disabled={sending} />;
   }
 
   return (
-    <main className="flex h-dvh flex-col bg-[#F3F3F3]">
-      <div ref={chatWindowRef} className="chat-scroll flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-6 pb-10 pt-10">
-          <h1 className="mb-10 px-2 text-2xl font-semibold text-[#202020]">Chat</h1>
-
-          <div className="flex flex-col" aria-live="polite">
-            {loading && <p className="px-2 text-sm text-[#666666]">Loading chat…</p>}
-            {messages.map((message, index) => (
-              <ChatMessage key={message.id} message={message} isFirst={index === 0} />
-            ))}
-            {sending && <p className="px-2 py-4 text-sm text-[#666666]">Waiting for a reply…</p>}
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto w-full max-w-5xl px-6 pb-6">
-        {error && (
-          <p role="alert" className="mb-3 text-sm text-red-700">{error}</p>
-        )}
-        <ChatInput onSend={send} disabled={loading || sending || !!error} />
-      </div>
-    </main>
+    <ConversationPage
+      messages={messages}
+      sending={sending}
+      error={error}
+      onSend={send}
+    />
   );
 }

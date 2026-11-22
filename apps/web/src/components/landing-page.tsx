@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type KeyboardEvent } from "react";
-import styles from "./landingpage.module.css";
+import styles from "./landing-page.module.css";
 
 interface LandingPageProps {
   onSend: (content: string) => void | Promise<void>;
