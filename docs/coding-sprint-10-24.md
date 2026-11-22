@@ -44,9 +44,23 @@ The starting signatures are in `apps/web/src/components/`, `apps/web/src/lib/api
 
 Each chat handler accepts `service: ChatServiceDep`, defined in `apps/api/app/dependencies.py`. Once Task 4 registers the routes, FastAPI will call `get_chat_service`, resolving its repository and agent dependencies first. The handler can then delegate to the supplied service (for example, `service.create_chat(payload.title)`). The service and repository use ordinary constructor arguments and do not depend on FastAPI.
 
+The contracts live in `apps/api/app/interfaces.py`: `ChatServiceProtocol` defines what routes can call, while `ChatRepositoryProtocol` and `ResourceAgentProtocol` define what `ChatService` can call. Consumers import these interfaces; `dependencies.py` selects and constructs the concrete `ChatService`, `ChatRepository`, and `ResourceAgent`. The repository still owns its Supabase-specific implementation. The agent's prompt-building method is internal and is not part of its consumer-facing interface.
+
+These are Python structural protocols: an implementation or fake satisfies a contract by providing methods with matching signatures, without inheriting from the protocol. Type checkers can check those signatures; protocols do not enforce them at runtime. Keep the contracts and implementations aligned as the sprint methods are filled in.
+
 The repository, agent, and service providers create new instances per request; FastAPI reuses a provider's result within that request by default. The Supabase client is shared across requests within each application worker. FastAPI's lifespan in `app/main.py` creates it at startup, stores it on `app.state.supabase`, and closes its HTTP connection pool at shutdown. `get_supabase_client` retrieves this shared instance. Keep its backend credentials fixed; do not sign individual users into the shared client or change its authentication headers.
 
 Export `SUPABASE_URL` and `SUPABASE_SECRET_KEY` before starting the API. If either is missing, the scaffold still starts and `/health` works, but resolving the Supabase dependency returns HTTP 503. Restart the API after changing configuration. Tests can replace `get_chat_service` or any lower-level provider with `app.dependency_overrides` without contacting Supabase or an LLM. The chat routes and business methods remain sprint TODOs.
+
+For example, after constructing fakes that satisfy the repository and agent protocols:
+
+```python
+app.dependency_overrides[get_chat_repository] = lambda: fake_repository
+app.dependency_overrides[get_resource_agent] = lambda: fake_agent
+# Requests now receive a real ChatService with the supplied fakes.
+# Clear overrides in test teardown when reusing the app.
+app.dependency_overrides.clear()
+```
 
 ## Sprint completion target
 
