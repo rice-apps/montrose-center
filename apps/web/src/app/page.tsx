@@ -1,37 +1,62 @@
-'use client';
-import { ChatSidebar } from "@/components/ChatSidebar";
-import type { ChatSummary } from "@/lib/api";
-import { useState } from "react";
+"use client";
 
-export default function Page() {
-  const fakeChats: ChatSummary[] = [
-    {id: "1", title: "the", created_at: "now", updated_at: "2026-10-25T09:00:00-06:00"},
-    {id: "2", title: "this", created_at: "now", updated_at: "2026-11-14T13:00:00-06:00"},
-    {id: "3", title: "boys", created_at: "now", updated_at: "2026-09-15T12:00:00-06:00"},
-    {id: "4", title: "one", created_at: "now", updated_at: "2026-11-13T22:00:00-06:00"},
-    {id: "5", title: "is", created_at: "now", updated_at: "2026-11-10T10:00:00-06:00"},
-    {id: "6", title: "for", created_at: "now", updated_at: "2026-11-10T10:00:00-06:00"},
-    {id: "7", title: "with", created_at: "now", updated_at: "2026-09-15T12:00:00-06:00"},
-    {id: "8", title: "the", created_at: "now", updated_at: "2026-09-15T12:00:00-06:00"},
-    {id: "9", title: "boomin", created_at: "now", updated_at: "2026-08-15T12:00:00-06:00"},
-    {id: "10", title: "system", created_at: "now", updated_at: "2026-08-15T12:00:00-06:00"},
-  ];
+import { useState, type ReactElement } from "react";
+import { LandingPage } from "@/components/landing-page";
+import { ConversationPage } from "@/components/conversation-page";
+import { createChat, sendMessage, type Message } from "@/lib/api";
 
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const handleSelect = (chatId: string) => {
-    setActiveChatId(chatId)
+export default function ChatPage(): ReactElement {
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const send = async (content: string) => {
+    if (!content.trim() || sending) return;
+    setSending(true);
+    setError(null);
+    const pendingMessage: Message = {
+      id: crypto.randomUUID(),
+      chat_id: chatId ?? "",
+      role: "user",
+      content: content.trim(),
+      created_at: new Date().toISOString(),
+    };
+    setMessages((previous) => [...previous, pendingMessage]);
+    try {
+      let currentId = chatId;
+      if (!currentId) {
+        const chat = await createChat();
+        currentId = chat.id;
+        setChatId(currentId);
+      }
+      const response = await sendMessage(currentId, content.trim());
+      setMessages((previous) => [
+        ...previous.map((message) =>
+          message.id === pendingMessage.id ? response.user_message : message,
+        ),
+        response.assistant_message,
+      ]);
+    } catch (error) {
+      setMessages((previous) => previous.filter((message) => message.id !== pendingMessage.id));
+      const detail = error instanceof Error ? error.message : "Unable to send the message.";
+      setError(`${detail} Your message may already be saved. Refresh the page to start a new chat.`);
+      throw error; // Keep the composer's draft when the request fails.
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (!error && messages.length === 0) {
+    return <LandingPage onSend={send} disabled={sending} />;
   }
-  const handleNewChat = () => {
-    setActiveChatId(null)
-   }
 
   return (
-    <main style={{ display: "flex", backgroundColor: "gray", padding: "16px", gap: "10px"}}>
-      <ChatSidebar chats={fakeChats} 
-      activeChatId={activeChatId} 
-      onSelectChat={handleSelect} 
-      onNewChat={handleNewChat}/>
-      <p>chat's id: {activeChatId}</p>
-    </main>
+    <ConversationPage
+      messages={messages}
+      sending={sending}
+      error={error}
+      onSend={send}
+    />
   );
 }
