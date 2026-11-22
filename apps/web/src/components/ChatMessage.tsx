@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { AttachmentViewer } from "@/components/AttachmentViewer";
 import type { UIMessage } from "@/lib/attachments";
@@ -65,6 +67,7 @@ export function ChatMessage({
   const attachments = message.attachments ?? [];
   const [viewing, setViewing] = useState<number | null>(null);
   const hasText = message.content.length > 0;
+  const visibleContent = shouldStream ? tokens.slice(0, count).join("") : message.content;
 
   return (
     <div
@@ -98,30 +101,32 @@ export function ChatMessage({
               isUser ? "bg-[#EBEBEB] text-[#202020]" : "text-slate-800"
             }`}
           >
-            {isUser || <h2 className="text-sm text-[#202020] font-medium">Bot</h2>}
-            <p
-              aria-hidden={shouldStream || undefined}
-              className="text-[#666666] text-sm mt-1 leading-relaxed whitespace-pre-wrap"
-            >
-              {shouldStream
-                ? tokens.slice(0, count).map((t, i) =>
-                    /^\s+$/.test(t) ? (
-                      t
-                    ) : (
-                      <span key={i} className="animate-word-in">
-                        {t}
-                      </span>
-                    ),
-                  )
-                : message.content}
-              {shouldStream && !done && (
-                <span
-                  aria-hidden
-                  className="ml-1 inline-block size-1.5 rounded-full bg-[#202020] align-middle animate-caret"
-                />
-              )}
-            </p>
-            {shouldStream && <span className="sr-only">{message.content}</span>}
+            {isUser || <h2 className="text-sm text-[#202020] font-medium">Rosie</h2>}
+            {isUser ? (
+              <p className="text-[#666666] text-sm mt-1 leading-relaxed whitespace-pre-wrap">
+                {message.content}
+              </p>
+            ) : (
+              <>
+                <div
+                  aria-hidden={shouldStream || undefined}
+                  className="chat-markdown text-[#666666] text-sm mt-1 leading-relaxed"
+                >
+                  <Markdown remarkPlugins={[remarkGfm]}>{visibleContent}</Markdown>
+                  {shouldStream && !done && (
+                    <span
+                      aria-hidden
+                      className="ml-1 inline-block size-1.5 rounded-full bg-[#202020] align-middle animate-caret"
+                    />
+                  )}
+                </div>
+                {shouldStream && (
+                  <div className="sr-only">
+                    <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>

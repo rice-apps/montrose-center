@@ -75,6 +75,80 @@ body {
   scrollbar-color: #d4d4d4 transparent;
 }
 
+.chat-markdown {
+  overflow-wrap: anywhere;
+}
+
+.chat-markdown > * + * {
+  margin-top: 0.75rem;
+}
+
+.chat-markdown :is(h1, h2, h3, h4, h5, h6, strong) {
+  color: #202020;
+  font-weight: 600;
+}
+
+.chat-markdown h1 { font-size: 1.25rem; }
+.chat-markdown h2 { font-size: 1.125rem; }
+.chat-markdown h3 { font-size: 1rem; }
+
+.chat-markdown :is(ul, ol) {
+  padding-left: 1.5rem;
+}
+
+.chat-markdown ul { list-style: disc; }
+.chat-markdown ol { list-style: decimal; }
+.chat-markdown li + li { margin-top: 0.25rem; }
+.chat-markdown li > p + p { margin-top: 0.5rem; }
+
+.chat-markdown a {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.chat-markdown blockquote {
+  border-left: 3px solid #d4d4d4;
+  padding-left: 1rem;
+}
+
+.chat-markdown code {
+  border-radius: 0.25rem;
+  background: #e8e8e8;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.875em;
+}
+
+.chat-markdown pre {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: #e8e8e8;
+  padding: 0.75rem;
+}
+
+.chat-markdown pre code {
+  padding: 0;
+}
+
+.chat-markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.chat-markdown :is(th, td) {
+  border: 1px solid #d4d4d4;
+  padding: 0.5rem 0.75rem;
+}
+
+.chat-markdown th {
+  background: #e8e8e8;
+}
+
+.chat-markdown hr {
+  border-color: #d4d4d4;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
