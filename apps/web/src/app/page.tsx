@@ -10,6 +10,12 @@ export default function ChatPage(): ReactElement {
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [loadingChat, setLoadingChat] = useState(false);
   const chatLoadId = useRef(0);
+  const activeChatId = useRef<string | null>(null);
+  const pendingSend = useRef<{
+    chatId: string | null;
+    messages: Message[];
+    error: string | null;
+  } | null>(null);
   const [sidebarError, setSidebarError] = useState<string | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -31,15 +37,18 @@ export default function ChatPage(): ReactElement {
   }, []);
 
   const selectChat = async (id: string) => {
-    if (sending) return;
     const loadId = ++chatLoadId.current;
+    const request = pendingSend.current;
     setLoadingChat(true);
     setError(null);
     try {
       const chat = await getChat(id);
       if (loadId !== chatLoadId.current) return;
+      activeChatId.current = chat.id;
       setChatId(chat.id);
-      setMessages(chat.messages);
+      // Keep an in-flight message (or its completed reply) when returning to its chat.
+      setMessages(request?.chatId === id ? request.messages : chat.messages);
+      setError(request?.chatId === id ? request.error : null);
     } catch (error) {
       if (loadId !== chatLoadId.current) return;
       setError(error instanceof Error ? error.message : "Unable to load the chat.");
@@ -49,8 +58,8 @@ export default function ChatPage(): ReactElement {
   };
 
   const newChat = () => {
-    if (sending) return;
     chatLoadId.current += 1;
+    activeChatId.current = null;
     setLoadingChat(false);
     setChatId(null);
     setMessages([]);
@@ -68,13 +77,23 @@ export default function ChatPage(): ReactElement {
       content: content.trim(),
       created_at: new Date().toISOString(),
     };
-    setMessages((previous) => [...previous, pendingMessage]);
+    const loadId = chatLoadId.current;
+    const request = { chatId, messages: [...messages, pendingMessage], error: null as string | null };
+    pendingSend.current = request;
+    const isCurrentChat = () => request.chatId !== null
+      ? activeChatId.current === request.chatId
+      : chatLoadId.current === loadId;
+    setMessages(request.messages);
     try {
       let currentId = chatId;
       if (!currentId) {
         const chat = await createChat(content.trim().slice(0, 80));
         currentId = chat.id;
-        setChatId(currentId);
+        request.chatId = currentId;
+        if (chatLoadId.current === loadId) {
+          activeChatId.current = currentId;
+          setChatId(currentId);
+        }
         setChats((current) => [
           { id: chat.id, title: chat.title, created_at: chat.created_at, updated_at: chat.updated_at },
           ...current,
@@ -84,18 +103,19 @@ export default function ChatPage(): ReactElement {
       setChats((current) => current.map((chat) =>
         chat.id === currentId ? { ...chat, updated_at: response.assistant_message.created_at } : chat,
       ));
-      setMessages((previous) => [
-        ...previous.map((message) =>
-          message.id === pendingMessage.id ? response.user_message : message,
-        ),
-        response.assistant_message,
-      ]);
+      request.messages = [...messages, response.user_message, response.assistant_message];
+      if (isCurrentChat()) setMessages(request.messages);
     } catch (error) {
-      setMessages((previous) => previous.filter((message) => message.id !== pendingMessage.id));
+      request.messages = messages;
       const detail = error instanceof Error ? error.message : "Unable to send the message.";
-      setError(`${detail} Your message may already be saved. Refresh the page to start a new chat.`);
+      request.error = `${detail} Your message may already be saved. Refresh the page to start a new chat.`;
+      if (isCurrentChat()) {
+        setMessages(request.messages);
+        setError(request.error);
+      }
       throw error; // Keep the composer's draft when the request fails.
     } finally {
+      pendingSend.current = null;
       setSending(false);
     }
   };
@@ -107,7 +127,6 @@ export default function ChatPage(): ReactElement {
         activeChatId={chatId}
         onSelectChat={selectChat}
         onNewChat={newChat}
-        disabled={sending}
         error={sidebarError}
       />
       <div className="min-w-0 flex-1 overflow-y-auto">
@@ -117,8 +136,8 @@ export default function ChatPage(): ReactElement {
           <ConversationPage
             key={chatId ?? "new"}
             messages={messages}
-            sending={sending}
-            disabled={loadingChat}
+            sending={sending && pendingSend.current?.chatId === chatId}
+            disabled={sending || loadingChat}
             error={error}
             onSend={send}
           />

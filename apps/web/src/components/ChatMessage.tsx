@@ -27,7 +27,7 @@ export function ChatMessage({
     <div
       className={`flex animate-message-in ${
         isUser
-          ? "justify-end origin-bottom-right"
+          ? "mb-4 justify-end origin-bottom-right"
           : "justify-start origin-bottom-left"
       }`}
     >
@@ -52,15 +52,15 @@ export function ChatMessage({
         {(hasText || !isUser) && (
           <div
             className={`max-w-full rounded-2xl px-4 py-3 transition-colors ${
-              isUser ? "bg-[#EBEBEB] text-[#202020]" : "text-slate-800"
+              isUser ? "bg-[#EBEBEB] text-black" : "text-black"
             }`}
           >
             {isUser ? (
-              <p className="text-[#666666] text-sm mt-1 leading-relaxed whitespace-pre-wrap">
+              <p className="text-black text-sm mt-1 leading-relaxed whitespace-pre-wrap">
                 {message.content}
               </p>
             ) : (
-              <div className="chat-markdown text-[#666666] text-sm mt-1 leading-relaxed">
+              <div className="chat-markdown text-black text-sm mt-1 leading-relaxed">
                 <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
               </div>
             )}

@@ -10,7 +10,6 @@ export type ChatSidebarProps = {
   activeChatId: string | null;
   onSelectChat: (chatId: string) => void;
   onNewChat: () => void;
-  disabled?: boolean;
   error?: string | null;
 };
 
@@ -65,7 +64,7 @@ export function ChatSidebar(props: ChatSidebarProps): ReactElement{
     <div className={styles.agentName}>
       Rosie
     </div>
-    <button type="button" className={styles.newChat} onClick={props.onNewChat} disabled={props.disabled}>
+    <button type="button" className={styles.newChat} onClick={props.onNewChat}>
         <Plus/><p className={styles.label}>New chat</p>
     </button>
     <div className={styles.heading}>
@@ -79,7 +78,7 @@ export function ChatSidebar(props: ChatSidebarProps): ReactElement{
           <ul className={styles.chatList}>
             {group.chats.map(chat => (
             <li key={chat.id}>
-              <button type="button" disabled={props.disabled} aria-current={chat.id === props.activeChatId ? "true" : undefined} className={`${styles.listItems} ${chat.id === props.activeChatId ? styles.selected : ""}`}
+              <button type="button" aria-current={chat.id === props.activeChatId ? "true" : undefined} className={`${styles.listItems} ${chat.id === props.activeChatId ? styles.selected : ""}`}
               onClick = {() => props.onSelectChat(chat.id)}>
                 <MessageCircle/>
                 <span className={styles.chatTitle}>{chat.title || "New chat"}</span>

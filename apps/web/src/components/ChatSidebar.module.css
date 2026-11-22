@@ -22,10 +22,10 @@
 .sidebar{
     display: flex;
     flex-direction: column;
-    width: clamp(160px, 24vw, 240px);
+    width: clamp(180px, 26vw, 264px);
     height: 100dvh;
     flex-shrink: 0;
-    padding: 8px;
+    padding: 8px 16px 16px;
     gap: 24px; 
     background-color: #FFFFFF;
     color: var(--primary-color);
@@ -180,11 +180,6 @@ p.label{
     font-size: var(--label-size);
     line-height: var(--label-lh); 
     margin: 0; 
-}
-
-.sidebar button:disabled {
-    cursor: default;
-    opacity: 0.5;
 }
 
 .sidebar button:focus-visible {
