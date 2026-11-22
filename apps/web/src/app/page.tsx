@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactElement } from "react";
+import { LandingPage } from "./landingpage/landingpage";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
 import { createChat, getChat, listChats, sendMessage, type Message } from "@/lib/api";
@@ -78,6 +79,10 @@ export default function ChatPage(): ReactElement {
     }
   };
 
+  if (!loading && !error && messages.length === 0) {
+    return <LandingPage onSend={send} disabled={sending} />;
+  }
+
   return (
     <main className="flex h-dvh flex-col bg-[#F3F3F3]">
       <div ref={chatWindowRef} className="chat-scroll flex-1 overflow-y-auto">
@@ -86,9 +91,6 @@ export default function ChatPage(): ReactElement {
 
           <div className="flex flex-col" aria-live="polite">
             {loading && <p className="px-2 text-sm text-[#666666]">Loading chat…</p>}
-            {!loading && !error && messages.length === 0 && (
-              <p className="px-2 text-sm text-[#666666]">Start a conversation.</p>
-            )}
             {messages.map((message, index) => (
               <ChatMessage key={message.id} message={message} isFirst={index === 0} />
             ))}

@@ -4,16 +4,8 @@ import { useState, type KeyboardEvent } from "react";
 import styles from "./landingpage.module.css";
 
 interface LandingPageProps {
-  onSend?: (content: string) => void | Promise<void>;
-  onAttach?: () => void;
-}
-
-function PlusIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  onSend: (content: string) => void | Promise<void>;
+  disabled?: boolean;
 }
 
 function ArrowUpIcon() {
@@ -31,26 +23,25 @@ function ArrowUpIcon() {
   );
 }
 
-export function LandingPage({ onSend, onAttach }: LandingPageProps) {
+export function LandingPage({ onSend, disabled = false }: LandingPageProps) {
   const [value, setValue] = useState("");
-  const [messages, setMessages] = useState<string[]>([]);
-  const canSend = value.trim().length > 0;
-  // Once the first message is sent, the input docks to the bottom as a single-row bar
-  const docked = messages.length > 0;
+  const canSend = !disabled && value.trim().length > 0;
 
-  function submit() {
+  async function submit() {
     if (!canSend) return;
-    const content = value.trim();
-    setMessages((prev) => [...prev, content]);
-    onSend?.(content);
-    setValue("");
+    try {
+      await onSend(value.trim());
+      setValue("");
+    } catch {
+      // The chat page displays send errors.
+    }
   }
 
   // Enter sends; Shift+Enter adds a new line
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      submit();
+      void submit();
     }
   }
 
@@ -60,6 +51,7 @@ export function LandingPage({ onSend, onAttach }: LandingPageProps) {
       placeholder="Ask anything..."
       aria-label="Ask anything"
       rows={1}
+      disabled={disabled}
       autoFocus
       value={value}
       onChange={(e) => setValue(e.target.value)}
@@ -74,46 +66,17 @@ export function LandingPage({ onSend, onAttach }: LandingPageProps) {
   );
 
   return (
-    <main className={docked ? styles.chatPage : styles.page}>
-      {docked ? (
-        <div className={styles.thread}>
-          {messages.map((m, i) => (
-            <p key={i} className={styles.userMessage}>
-              {m}
-            </p>
-          ))}
-        </div>
-      ) : (
-        <h1 className={styles.heading}>What can I help you with?</h1>
-      )}
-
+    <main className={styles.page}>
+      <h1 className={styles.heading}>What can I help you with?</h1>
       <form
-        className={docked ? styles.bar : styles.inputBox}
+        className={styles.inputBox}
         onSubmit={(e) => {
           e.preventDefault();
-          submit();
+          void submit();
         }}
       >
-        {docked ? (
-          <>
-            <button type="button" className={styles.barAttach} onClick={onAttach} aria-label="Attach">
-              <PlusIcon size={20} />
-            </button>
-            {textarea}
-            {sendButton}
-          </>
-        ) : (
-          <>
-            {textarea}
-            <div className={styles.actions}>
-              <button type="button" className={styles.attach} onClick={onAttach}>
-                <PlusIcon />
-                Attach
-              </button>
-              {sendButton}
-            </div>
-          </>
-        )}
+        {textarea}
+        <div className={styles.actions}>{sendButton}</div>
       </form>
     </main>
   );
