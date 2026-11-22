@@ -34,7 +34,7 @@
         font-weight: var(--bot-weight);
         font-size: var(--bot-size);
         line-height: var(--bot-lh);
-        padding: 8px;
+        padding: 8px 8px 0;
     }
 
     .newChat{
