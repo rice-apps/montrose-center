@@ -12,6 +12,8 @@ from pydantic_ai.models import Model, infer_model
 from supabase import Client
 
 from app.interfaces import (
+    CatalogRepositoryProtocol,
+    CatalogServiceProtocol,
     ChatRepositoryProtocol,
     ChatServiceProtocol,
     ResourceAgentProtocol,
@@ -19,6 +21,7 @@ from app.interfaces import (
     ResourceSearchRepositoryProtocol,
     ResourceSearchServiceProtocol,
 )
+from app.services.catalog import CatalogService
 from app.repositories.chats import ChatRepository
 from app.repositories.resources import ResourceRepository
 from app.repositories.resource_search import ResourceSearchRepository
@@ -93,3 +96,25 @@ def get_resource_search_service(
 ResourceSearchServiceDep = Annotated[
     ResourceSearchServiceProtocol, Depends(get_resource_search_service)
 ]
+
+
+
+
+def get_catalog_repository(
+    client: Annotated[Client, Depends(get_supabase_client)],
+) -> CatalogRepositoryProtocol:
+    return ResourceRepository(client)
+
+
+def get_catalog_service(
+    repository: Annotated[
+        CatalogRepositoryProtocol, Depends(get_catalog_repository)
+    ],
+) -> CatalogServiceProtocol:
+    return CatalogService(repository)
+
+
+CatalogServiceDep = Annotated[
+    CatalogServiceProtocol, Depends(get_catalog_service)
+]
+

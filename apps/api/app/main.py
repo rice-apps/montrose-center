@@ -12,6 +12,8 @@ from supabase.lib.client_options import SyncClientOptions
 
 from app.routers.chats import router as chats_router
 
+from app.routers.catalog import router as catalog_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -48,6 +50,7 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 app.include_router(chats_router)
+app.include_router(catalog_router)
 
 
 @app.get("/health")

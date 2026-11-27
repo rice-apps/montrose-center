@@ -10,6 +10,10 @@ from typing import Protocol
 from app.schemas.chats import Chat, ChatSummary, Message, SendMessageResponse
 from app.schemas.resource_search import ResourceSearchResult
 
+from uuid import UUID
+
+from app.schemas.catalog import Resource, ResourceCreate, ResourceUpdate
+
 
 class ChatRepositoryProtocol(Protocol):
     """Persistence operations needed by the chat service."""
@@ -63,3 +67,40 @@ class ResourceSearchServiceProtocol(Protocol):
     """Validated search operation exposed to the agent tool and catalog API."""
 
     def search_services(self, query: str, limit: int = 10) -> list[ResourceSearchResult]: ...
+
+
+
+class CatalogRepositoryProtocol(Protocol):
+    """Resource operations supported by the catalog repository."""
+
+    def create_resource(self, resource: ResourceCreate) -> Resource: ...
+
+    def list_resources(self, limit: int = 10, offset: int = 0) -> list[Resource]: ...
+
+    def get_resource(self, service_id: UUID) -> Resource: ...
+
+    def update_resource(
+        self, service_id: UUID, resource: ResourceUpdate
+    ) -> Resource: ...
+
+    def deactivate_resource(self, service_id: UUID) -> Resource: ...
+
+    def reactivate_resource(self, service_id: UUID) -> Resource: ...
+
+
+class CatalogServiceProtocol(Protocol):
+    """Resource operations exposed by the catalog service."""
+
+    def create_resource(self, resource: ResourceCreate) -> Resource: ...
+
+    def list_resources(self, limit: int = 10, offset: int = 0) -> list[Resource]: ...
+
+    def get_resource(self, service_id: UUID) -> Resource: ...
+
+    def update_resource(
+        self, service_id: UUID, resource: ResourceUpdate
+    ) -> Resource: ...
+
+    def deactivate_resource(self, service_id: UUID) -> Resource: ...
+
+    def reactivate_resource(self, service_id: UUID) -> Resource: ...
